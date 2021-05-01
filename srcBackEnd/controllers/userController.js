@@ -3,7 +3,9 @@ const SHA256 = require('crypto-js/sha256');
 const {
   saveBannedCategories,
   delBannedCategories,
-  addFav, delFav
+  addFav,
+  delFav,
+  getFavs,
 } = require('../utilities/profile/profile');
 
 exports.getUser = async (req, res) => {
@@ -145,8 +147,13 @@ exports.addUserFav = async (req, res) => {
   addFav(idUser, idRecipe, res);
 };
 
-exports.delUserFav = async(req, res) => {
+exports.delUserFav = async (req, res) => {
   const { idUser } = res.user;
   const { idRecipe } = req.body;
   delFav(idUser, idRecipe, res);
-}
+};
+
+exports.getUserFav = async (req, res) => {
+  const { idUser } = res.user;
+  getFavs(idUser, res);
+};

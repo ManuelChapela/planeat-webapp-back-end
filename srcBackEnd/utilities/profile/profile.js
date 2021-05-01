@@ -99,3 +99,23 @@ exports.delFav = async (idUser, idRecipe, res) => {
     });
   }
 };
+
+exports.getFavs = async (idUser, res) => {
+  const sql = `SELECT idRecipe FROM Favs WHERE idUser = ?`;
+
+  try {
+    const results = await doQuery(sql, idUser);
+    console.log(results);
+    res.status(200).send({
+      OK: 1,
+      message: `Obtenidos favoritos del usuario ${idUser}`,
+      Favs: results
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      OK: 0,
+      message: `No se han podido obtener Favoritos: ${error.message}`,
+    });
+  }
+};
