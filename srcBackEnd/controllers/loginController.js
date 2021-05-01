@@ -4,7 +4,8 @@ const { nanoid } = require('nanoid');
 const { google } = require('googleapis');
 const { mailer } = require('../utilities/mailer');
 const { doQuery } = require('../utilities/doQuery');
-const dbConnection = require('../utilities/db');
+//const dbConnection = require('../utilities/db');
+
 
 const isValidUser = (user) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user);

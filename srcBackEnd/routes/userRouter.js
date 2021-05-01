@@ -8,4 +8,10 @@ router
   .get(userController.getUser)
   .patch(userController.updateUser)
 
+
+  router
+    .route('/saveBanned')
+    //OK
+    .patch(userController.updateUserBannedCategories);
+
 module.exports = router;

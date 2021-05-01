@@ -1,9 +1,9 @@
 const { doQuery } = require('../utilities/doQuery');
 const SHA256 = require('crypto-js/sha256');
-
-const SqlString = require('sqlstring');
-
-
+const {
+  saveBannedCategories,
+  delBannedCategories,
+} = require('../utilities/profile/profile');
 
 exports.getUser = async (req, res) => {
   const user = res.user.idUser;
@@ -78,13 +78,10 @@ exports.updateUser = async (req, res) => {
   sql += sqlSet.join(',') + ` WHERE id =  ?`;
   sqlValues.push(idUser);
 
-  console.log (sql)
-  console.log (sqlValues)
+  console.log(sql);
+  console.log(sqlValues);
 
-  //sql = SqlString.format(sql, sqlValues);
-
-
-   try {
+  try {
     const results = await doQuery(sql, sqlValues);
     console.log('SEGUNDO', results);
 
@@ -96,11 +93,39 @@ exports.updateUser = async (req, res) => {
       message: 'Perfil actualizado',
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     //no se ha podido actualizar perfil de ninguna de las dos maneras (insert o update)
     res.status(500).send({
       OK: 0,
       message: 'No se ha podido actualizar perfil',
     });
-  } 
+  }
+};
+
+exports.updateUserBannedCategories = async (req, res) => {
+  const { idUser } = res.user;
+  const bannedObj = req.body.bannedObj;
+
+  //Para hacer el update vamos a borrar primero todo lo que hay del usuario
+  const del = await delBannedCategories(idUser).catch((error) => {
+    res.status(500).send({
+      OK: 0,
+      message: `Error al borrar categorías baneadas del usuario: ${error}`,
+    });
+    throw error;
+  });
+
+  //Luego añadimos el objeto entero de configuración
+  const add = await saveBannedCategories(bannedObj, idUser).catch((error) => {
+    res.status(500).send({
+      OK: 0,
+      message: `Error al añadir categorías baneadas del usuario: ${error}`,
+    });
+    throw error;
+  });
+
+  res.send({
+    OK: 1,
+    message: `Actualizadas las categorías baneadas del usuario. Borradas ${del}, Añadidas ${add}`,
+  });
 };
