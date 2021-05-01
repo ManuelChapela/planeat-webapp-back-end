@@ -1,0 +1,40 @@
+{
+  "name": "fyf_app",
+  "version": "1.0.0",
+  "description": "Find your Future APP",
+  "main": "apiServer.js",
+  "scripts": {
+    "start": "node apiServer"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rovilram/FYFApp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rovilram/FYFApp/issues"
+  },
+  "homepage": "https://github.com/rovilram/FYFApp#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "base64url": "^3.0.1",
+    "bluebird": "^3.7.2",
+    "cheerio": "^1.0.0-rc.5",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.0.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "googleapis": "^71.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "mysql": "^2.18.1",
+    "nanoid": "^3.1.22",
+    "nodemailer": "^6.5.0",
+    "nodemon": "^2.0.7",
+    "path": "^0.12.7",
+    "sqlstring": "^2.3.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.23.0"
+  }
+}
