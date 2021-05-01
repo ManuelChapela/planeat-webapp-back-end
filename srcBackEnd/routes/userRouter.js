@@ -4,14 +4,20 @@ const userController = require('../controllers/userController');
 
 router
   .route('/')
-  //OK
   .get(userController.getUser)
-  .patch(userController.updateUser)
+  .patch(userController.updateUser);
+
+router
+  .route('/savebancat')
+  .patch(userController.updateUserBannedCategories);
 
 
-  router
-    .route('/saveBanned')
-    //OK
-    .patch(userController.updateUserBannedCategories);
+  //TODO: Ver como hacer el baneado de alimentos
+router.route('/savebaning').patch(userController.updateUserBannedIngredients);
+
+
+router.route('/addfav').post(userController.addUserFav);
+router.route('/delfav').post(userController.delUserFav);
+
 
 module.exports = router;

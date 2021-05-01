@@ -172,9 +172,10 @@ exports.authUser = async (req, res, next) => {
 
   if (authorization) {
     const token = authorization.split(' ')[1];
+    console.log("TOKEN!!!!", token)
 
     const payload = jwt.decode(token);
-
+    console.log("PAYLOAD!!!!", payload)
     if (!payload) {
       res.status(401).send({
         OK: 0,
@@ -183,6 +184,7 @@ exports.authUser = async (req, res, next) => {
       });
     } else {
       const { idUser } = payload;
+      console.log("IDUSER!!!!", idUser)
       let sql = `SELECT * FROM Users WHERE id = ${idUser}`;
       const response = await doQuery(sql);
 

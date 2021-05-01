@@ -3,6 +3,7 @@ const SHA256 = require('crypto-js/sha256');
 const {
   saveBannedCategories,
   delBannedCategories,
+  addFav, delFav
 } = require('../utilities/profile/profile');
 
 exports.getUser = async (req, res) => {
@@ -129,3 +130,23 @@ exports.updateUserBannedCategories = async (req, res) => {
     message: `Actualizadas las categorías baneadas del usuario. Borradas ${del}, Añadidas ${add}`,
   });
 };
+
+exports.updateUserBannedIngredients = async (req, res) => {
+  console.log('TO BE ADDED!!!!!!');
+  res.send({ message: 'TO BE ADDED!!!!!!!!!!!!' });
+  //TODO Cuando sepamos como atacar a la tabla de ingredientes de DATA hay que ver como se hace este método.
+
+  //Si podemos hacer autocompletado en front se podría hacer igual que las categorías añadiendo a la tabla el ID de ingrediente.
+};
+
+exports.addUserFav = async (req, res) => {
+  const { idUser } = res.user;
+  const { idRecipe } = req.body;
+  addFav(idUser, idRecipe, res);
+};
+
+exports.delUserFav = async(req, res) => {
+  const { idUser } = res.user;
+  const { idRecipe } = req.body;
+  delFav(idUser, idRecipe, res);
+}

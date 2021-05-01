@@ -8,35 +8,21 @@ CREATE TABLE `Users` (
   email varchar(100) UNIQUE NOT NULL,
   pass varchar(64) NOT NULL,
   userName varchar(50),
-  boolFavCalendar boolean,
+  boolFavCalendar TINYINT(1), /*ANTES ESTABA COMO BOOL y funcionaba... ver si sigue funcionando con este cambio*/
   photo varchar(100),
   name varchar(100),
   PRIMARY KEY (`id`)
 );
 
-
-INSERT INTO Users (secret, email, pass, userName, boolFavCalendar, photo, name) VALUES ('Pkd0Dl5uzW', 'c@aa.es', 'cf0fc5378a8315c66fc5426b03a1cf3112fb705e53483e0be1ec5da45c5a5f3e', 'Roberto', false, 'http://kk.es', 'Roberto');
-SELECT * FROM Users;
-UPDATE Users
-SET 
-	secret="Pkd0Dl5uzW",
-    email="c@aa.es",
-    pass="cf0fc5378a8315c66fc5426b03a1cf3112fb705e53483e0be1ec5da45c5a5f3e",
-    userName="Roberto",
-    boolFavCalendar=false,
-    photo="http://kk.es",
-    name="Roberto Villares"
-WHERE id=1;
-
-
 DROP TABLE `Favs`;
 CREATE TABLE `Favs` (
-	id INT NOT NULL AUTO_INCREMENT,
+	id INT AUTO_INCREMENT NOT NULL,
     idUser INT,
     idRecipe INT,
     PRIMARY KEY (id),
     FOREIGN KEY (idUser) REFERENCES Users(id),
-    FOREIGN KEY (idRecipe) REFERENCES Recipes(id)
+    FOREIGN KEY (idRecipe) REFERENCES Recipes(id),
+    CONSTRAINT product_store_unique UNIQUE (idUser, idRecipe)
 );
 
 DROP TABLE `NoFavs`;
@@ -79,7 +65,6 @@ CREATE TABLE UserBannedIngredients (
     FOREIGN KEY (idIngredient) REFERENCES Ingredients(id)
 );
 
-SELECT * FROM BannedCategories;
 INSERT INTO BannedCategories (idCategory, category, title)
 	VALUES
 		(1, "meat", "Carne"),
@@ -92,16 +77,14 @@ INSERT INTO BannedCategories (idCategory, category, title)
         (8, "pasta", "Pasta");
 
         
-
-
 DROP TABLE Recipes;
 CREATE TABLE Recipes (
 	id INT NOT NULL AUTO_INCREMENT,
     idUser INT,
+    title VARCHAR(255),
     PRIMARY KEY (id),
 	FOREIGN KEY (idUser) REFERENCES Users(id)
 );
-
 
 DROP TABLE Ingredients;
 CREATE TABLE Ingredients (
