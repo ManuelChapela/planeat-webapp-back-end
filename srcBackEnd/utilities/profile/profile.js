@@ -101,7 +101,7 @@ exports.delFav = async (idUser, idRecipe, res) => {
 };
 
 exports.getFavs = async (idUser, res) => {
-  const sql = `SELECT idRecipe FROM Favs WHERE idUser = ?`;
+  const sql = `SELECT * FROM Recipes INNER JOIN Favs ON Recipes.id = Favs.idUser WHERE Favs.idUser=?`;
 
   try {
     const results = await doQuery(sql, idUser);
@@ -109,7 +109,7 @@ exports.getFavs = async (idUser, res) => {
     res.status(200).send({
       OK: 1,
       message: `Obtenidos favoritos del usuario ${idUser}`,
-      Favs: results
+      Favs: results,
     });
   } catch (error) {
     console.log(error);

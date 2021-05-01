@@ -18,3 +18,11 @@ WHERE id=1;
 
 SELECT * FROM BannedCategories;
 SELECT * FROM Favs;
+
+SELECT idRecipe FROM Favs WHERE idUser = 2;
+
+SELECT *
+FROM Recipes
+INNER JOIN Favs ON Recipes.id = Favs.idUser
+WHERE Favs.idUser=2;
+
