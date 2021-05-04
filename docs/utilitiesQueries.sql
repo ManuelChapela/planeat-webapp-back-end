@@ -24,5 +24,5 @@ SELECT idRecipe FROM Favs WHERE idUser = 2;
 SELECT *
 FROM Recipes
 INNER JOIN Favs ON Recipes.id = Favs.idUser
-WHERE Favs.idUser=2;
+WHERE Favs.idUser=?;
 

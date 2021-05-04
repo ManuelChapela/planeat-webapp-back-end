@@ -6,7 +6,11 @@ require('dotenv').config();
 
 const loginRouter = require('./srcBackEnd/routes/loginRouter');
 const userRouter = require('./srcBackEnd/routes/userRouter');
-const { authUser } = require('./srcBackEnd/controllers/loginController');
+const searchRouter = require('./srcBackEnd/routes/searchRouter');
+const {
+  authUser,
+  isLogged,
+} = require('./srcBackEnd/controllers/loginController');
 
 const server = express();
 
@@ -15,7 +19,7 @@ const HTTP = {
   host: process.env.HTTP_API_HOST || 'localhost',
 };
 
-  const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 //permitimos CORS sin limitaciones
 server.use(cors());
@@ -35,6 +39,10 @@ server.use('/', loginRouter);
 // USER ENDPOINTS
 server.use('/user', authUser);
 server.use('/user', userRouter);
+
+/// SEARCH ENDPOINTS
+server.use('/search', isLogged);
+server.use('/search', searchRouter);
 
 server.listen(PORT, () => {
   console.log(`API server running at http://${HTTP.host}:${PORT}`);

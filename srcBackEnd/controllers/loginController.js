@@ -6,7 +6,6 @@ const { mailer } = require('../utilities/mailer');
 const { doQuery } = require('../utilities/doQuery');
 //const dbConnection = require('../utilities/db');
 
-
 const isValidUser = (user) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user);
 };
@@ -25,23 +24,26 @@ const isValidPassword = (password) => {
   const validSpecial = /[@#$%&]+/.test(password);
 
   if (!validLong)
-    return { OK: false, message: 'password must be at least 8 characters' };
+    return {
+      OK: false,
+      message: 'La contraseña debe ser de al menos 8 caracteres.',
+    };
   else if (!validMin)
     return {
       OK: false,
-      message: 'password must be at least 1 lowercase character',
+      message: 'La contraseña debe contener minúsculas.',
     };
   else if (!validMay)
     return {
       OK: false,
-      message: 'password must be at least 1 uppercase character',
+      message: 'La contraseña debe contener mayúsculas.',
     };
   else if (!validNum)
-    return { OK: false, message: 'password must be at least 1 number' };
+    return { OK: false, message: 'La contraseña debe contener números.' };
   else if (!validSpecial)
     return {
       OK: false,
-      message: 'password must be at least 1 special character (@#$%&)',
+      message: 'La contraseña debe contener un carácter especial (@#$%&)',
     };
   else return { OK: true };
 };
@@ -74,6 +76,8 @@ exports.signUp = async (req, res) => {
   const name = req.body.name;
   const userName = req.body.name;
   const photo = req.body.photo;
+
+  console.log('PRUEBA', email, pass, name, userName, photo);
 
   //Validamos los campos user y password
   if (isValidUserPass(email, pass, res)) {
@@ -167,15 +171,57 @@ exports.logout = async (req, res) => {
   }
 };
 
+exports.isLogged = async (req, res, next) => {
+  const authorization = req.headers.authorization;
+
+  if (authorization) {
+    const token = authorization.split(' ')[1];
+
+    const payload = jwt.decode(token);
+    if (!payload) {
+      res.user = false;
+      next();
+    } else {
+      const { idUser } = payload;
+      console.log('IDUSER!!!!', idUser);
+      let sql = `SELECT * FROM Users WHERE id = ${idUser}`;
+      const response = await doQuery(sql);
+
+      if (response.length !== 0) {
+        const { secret } = response[0];
+        console.log(response);
+        console.log(secret, token);
+
+        try {
+          jwt.verify(token, secret);
+          console.log('Usuario Autenticado', idUser);
+
+          res.user = idUser;
+          next();
+        } catch (error) {
+          res.user = false;
+          next();
+        }
+      } else {
+        res.user = false;
+        next();
+      }
+    }
+  } else {
+    res.user = false;
+    next();
+  }
+};
+
 exports.authUser = async (req, res, next) => {
   const authorization = req.headers.authorization;
 
   if (authorization) {
     const token = authorization.split(' ')[1];
-    console.log("TOKEN!!!!", token)
+    console.log('TOKEN!!!!', token);
 
     const payload = jwt.decode(token);
-    console.log("PAYLOAD!!!!", payload)
+    console.log('PAYLOAD!!!!', payload);
     if (!payload) {
       res.status(401).send({
         OK: 0,
@@ -184,7 +230,7 @@ exports.authUser = async (req, res, next) => {
       });
     } else {
       const { idUser } = payload;
-      console.log("IDUSER!!!!", idUser)
+      console.log('IDUSER!!!!', idUser);
       let sql = `SELECT * FROM Users WHERE id = ${idUser}`;
       const response = await doQuery(sql);
 
@@ -309,9 +355,6 @@ exports.changePass = async (req, res) => {
     }
   }
 };
-
-
-
 
 const getOAuth2Client = (clientId, clientSecret, redirectUri) => {
   const oauth2Client = new google.auth.OAuth2({
@@ -522,7 +565,6 @@ exports.googleLink = (req, res) => {
     });
   }
 };
-
 
 const validateToken = async (authorization, res) => {
   if (!authorization) {

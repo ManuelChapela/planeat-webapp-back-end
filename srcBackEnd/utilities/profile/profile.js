@@ -40,6 +40,20 @@ exports.delBannedCategories = async (idUser) => {
   }
 };
 
+exports.getBannedCategories = async (idUser) => {
+    const sql = 'SELECT * FROM UserBannedCategories WHERE idUser = ?';
+    const values = [idUser];
+
+    try {
+      const results = await doQuery(sql, values);
+      console.log('SELECT:', results);
+      return results;
+    } catch (error) {
+      console.log(error);
+    }
+}
+
+
 exports.addFav = async (idUser, idRecipe, res) => {
   const sql = 'INSERT INTO Favs (idUser, idRecipe) VALUES (?)';
   const values = [[idUser, idRecipe]];

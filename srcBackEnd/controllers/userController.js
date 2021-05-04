@@ -133,6 +133,24 @@ exports.updateUserBannedCategories = async (req, res) => {
   });
 };
 
+exports.saveUserBannedCategories = async (req, res) => {
+    const { idUser } = res.user;
+    const bannedObj = req.body.bannedObj;
+
+    const add = await saveBannedCategories(bannedObj, idUser).catch((error) => {
+      res.status(500).send({
+        OK: 0,
+        message: `Error al añadir categorías baneadas del usuario: ${error}`,
+      });
+      throw error;
+    });
+
+    res.send({
+      OK: 1,
+      message: `Actualizadas las categorías baneadas del usuario. Añadidas ${add}`,
+    });
+}
+
 exports.updateUserBannedIngredients = async (req, res) => {
   console.log('TO BE ADDED!!!!!!');
   res.send({ message: 'TO BE ADDED!!!!!!!!!!!!' });
