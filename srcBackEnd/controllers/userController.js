@@ -3,6 +3,8 @@ const SHA256 = require('crypto-js/sha256');
 const {
   saveBannedCategories,
   delBannedCategories,
+  saveBannedIngredients,
+  delBannedIngredients,
   addFav,
   delFav,
   getFavs,
@@ -132,7 +134,7 @@ exports.updateUserBannedCategories = async (req, res) => {
     message: `Actualizadas las categorías baneadas del usuario. Borradas ${del}, Añadidas ${add}`,
   });
 };
-
+/* 
 exports.saveUserBannedCategories = async (req, res) => {
     const { idUser } = res.user;
     const bannedObj = req.body.bannedObj;
@@ -149,11 +151,37 @@ exports.saveUserBannedCategories = async (req, res) => {
       OK: 1,
       message: `Actualizadas las categorías baneadas del usuario. Añadidas ${add}`,
     });
-}
+} */
 
 exports.updateUserBannedIngredients = async (req, res) => {
-  console.log('TO BE ADDED!!!!!!');
-  res.send({ message: 'TO BE ADDED!!!!!!!!!!!!' });
+  const bannedIngredients = req.body;
+  const { idUser } = res.user;
+
+  //Para hacer el update vamos a borrar primero todo lo que hay del usuario
+  const del = await delBannedIngredients(idUser).catch((error) => {
+    res.status(500).send({
+      OK: 0,
+      message: `Error al borrar los ingredientes baneados del usuario: ${error}`,
+    });
+    throw error;
+  });
+
+  //Luego añadimos el objeto entero de configuración
+  const add = await saveBannedIngredients(bannedIngredients, idUser).catch(
+    (error) => {
+      res.status(500).send({
+        OK: 0,
+        message: `Error al añadir los ingredientes baneados del usuario: ${error}`,
+      });
+      throw error;
+    },
+  );
+
+  res.send({
+    OK: 1,
+    message: `Actualizadas los ingredientes baneados del usuario. Borradas ${del}, Añadidas ${add}`,
+  });
+
   //TODO Cuando sepamos como atacar a la tabla de ingredientes de DATA hay que ver como se hace este método.
 
   //Si podemos hacer autocompletado en front se podría hacer igual que las categorías añadiendo a la tabla el ID de ingrediente.

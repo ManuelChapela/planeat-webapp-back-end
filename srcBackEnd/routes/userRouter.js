@@ -10,7 +10,7 @@ router
 router
   .route('/savebancat')
   .patch(userController.updateUserBannedCategories)
-  .post(userController.saveUserBannedCategories);
+ // .post(userController.saveUserBannedCategories);
 
 
   //TODO: Ver como hacer el baneado de alimentos

@@ -54,6 +54,19 @@ exports.getBannedCategories = async (idUser) => {
 }
 
 
+exports.getBannedIngredients = async (idUser) => {
+  const sql = 'SELECT * FROM UserBannedIngredients WHERE idUser = ?';
+  const values = [idUser];
+
+  try {
+    const results = await doQuery(sql, values);
+    console.log('SELECT:', results);
+    return results;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 exports.addFav = async (idUser, idRecipe, res) => {
   const sql = 'INSERT INTO Favs (idUser, idRecipe) VALUES (?)';
   const values = [[idUser, idRecipe]];
@@ -131,5 +144,42 @@ exports.getFavs = async (idUser, res) => {
       OK: 0,
       message: `No se han podido obtener Favoritos: ${error.message}`,
     });
+  }
+};
+
+exports.delBannedIngredients = async (idUser) => {
+  const sql = 'DELETE FROM UserBannedIngredients WHERE idUser = ?';
+  const values = [idUser];
+
+  try {
+    const results = await doQuery(sql, values);
+    console.log('BORRADOS:', results.affectedRows);
+    return results.affectedRows;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+exports.saveBannedIngredients = async (bannedIngredients, idUser) => {
+  const values = [];
+  console.log("BANNED",bannedIngredients)
+  bannedIngredients
+    .map((el) => {
+      values.push([el.idIngredient, idUser]);
+    });
+
+  const sql = 'INSERT INTO UserBannedIngredients (idIngredient, idUser) VALUES ? ';
+
+  try {
+    if (values.length !== 0) {
+      const results = await doQuery(sql, [values]);
+      console.log('AÑADIDAS:', results.affectedRows);
+      return results.affectedRows;
+    } else {
+      console.log('AÑADIDAS:', 0);
+      return 0;
+    }
+  } catch (error) {
+    console.log(error);
   }
 };

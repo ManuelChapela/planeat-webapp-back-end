@@ -1,4 +1,7 @@
-const { getBannedCategories } = require('../utilities/profile/profile');
+const {
+  getBannedCategories,
+  getBannedIngredients,
+} = require('../utilities/profile/profile');
 
 exports.searchRouter = async (req, res) => {
   const defaultPreferences = {
@@ -145,36 +148,25 @@ exports.searchRouter = async (req, res) => {
       searchPreferences: defaultPreferences,
     });
   }
-  const response = await getBannedCategories(idUser);
+  const categories = await getBannedCategories(idUser);
+  const ingredients = await getBannedIngredients(idUser);
 
-  /*
-[
-    {
-        "id": 80,
-        "idCategory": 2,
-        "idUser": 2
-    },
-    {
-        "id": 81,
-        "idCategory": 4,
-        "idUser": 2
-    }
-]
-  */
-  //TODO Hay que añadir también los ingredientes vetados!!!
-
-  const newBannedCategories = defaultPreferences.bannedCategories.map((cat) => {
-    response.map((ban) => {
+  const bannedCategories = defaultPreferences.bannedCategories.map((cat) => {
+    categories.map((ban) => {
       if (ban.idCategory === cat.id) {
         cat.value = true;
       }
     });
     return cat;
   });
+  const bannedIngredients = ingredients.map((el) => {
+    return { idIngredient: el.idIngredient };
+  });
 
   const newPreferences = {
     ...defaultPreferences,
-    bannedCategories: newBannedCategories,
+    bannedCategories,
+    bannedIngredients,
   };
 
   res.send(newPreferences);
