@@ -55,7 +55,7 @@ exports.getBannedCategories = async (idUser) => {
 
 
 exports.getBannedIngredients = async (idUser) => {
-  const sql = 'SELECT * FROM UserBannedIngredients WHERE idUser = ?';
+  const sql = 'SELECT * FROM UserBannedIngredients as U, Ingredients as I WHERE U.idUser = ? AND U.idIngredient = I.id';
   const values = [idUser];
 
   try {

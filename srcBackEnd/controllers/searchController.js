@@ -3,7 +3,7 @@ const {
   getBannedIngredients,
 } = require('../utilities/profile/profile');
 
-exports.searchRouter = async (req, res) => {
+exports.searchPrefs = async (req, res) => {
   const defaultPreferences = {
     ingredients: [],
     bannedCategories: [
@@ -160,14 +160,25 @@ exports.searchRouter = async (req, res) => {
     return cat;
   });
   const bannedIngredients = ingredients.map((el) => {
-    return { idIngredient: el.idIngredient };
+    return { idIngredient: el.idIngredient, title: el.title };
   });
 
   const newPreferences = {
     ...defaultPreferences,
-    bannedCategories,
     bannedIngredients,
   };
 
   res.send(newPreferences);
+};
+
+exports.search = (req, res) => {
+  const {
+    ingredients,
+    bannedCategories,
+    bannedIngredients,
+    categories,
+    cost,
+    time,
+    daily,
+  } = req.bodys.searchPrefs;
 };

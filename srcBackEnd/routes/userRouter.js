@@ -9,7 +9,7 @@ router
 
 router
   .route('/savebancat')
-  .patch(userController.updateUserBannedCategories)
+  .patch(userController.updateUserBannedCategories);
  // .post(userController.saveUserBannedCategories);
 
 
