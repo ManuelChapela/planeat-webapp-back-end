@@ -7,6 +7,11 @@ require('dotenv').config();
 const loginRouter = require('./srcBackEnd/routes/loginRouter');
 const userRouter = require('./srcBackEnd/routes/userRouter');
 const searchRouter = require('./srcBackEnd/routes/searchRouter');
+
+const {autocompletado} = require('./srcBackEnd/controllers/autocompletado')
+
+
+
 const {
   authUser,
   isLogged,
@@ -43,6 +48,10 @@ server.use('/user', userRouter);
 /// SEARCH ENDPOINTS
 server.use('/search', isLogged);
 server.use('/search', searchRouter);
+
+
+/* // ENDPOINT TEMPORAL PARA AUTOCOMPLETADO
+server.get('/auto', autocompletado) */
 
 server.listen(PORT, () => {
   console.log(`API server running at http://${HTTP.host}:${PORT}`);

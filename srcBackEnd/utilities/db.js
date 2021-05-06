@@ -1,6 +1,5 @@
 const path = require('path');
 const mysql = require('mysql');
-const { rootCertificates } = require('tls');
 require('dotenv').config();
 const dbConnection = mysql.createConnection({
   host: process.env.DB_HOST,
