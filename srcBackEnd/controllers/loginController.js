@@ -70,7 +70,7 @@ const isValidUserPass = (user, password, res) => {
   return true; //user & pass valid
 };
 
-exports.signUp = async (req, res) => {
+exports.signUp = async (req, res, next) => {
   const email = req.body.email;
   let pass = req.body.pass;
   const name = req.body.name;
@@ -102,12 +102,12 @@ exports.signUp = async (req, res) => {
         sql = `INSERT INTO Users (secret, email, pass, userName, boolFavCalendar, photo, name) VALUES (?)`;
         values = [[secret, email, pass, userName, false, photo, name]];
         response = await doQuery(sql, values);
-
-        res.send({
+        next();
+/*         res.send({
           OK: 1,
           message: 'Usuario creado',
           usuario: response.insertId,
-        });
+        }); */
       }
     } catch (error) {
       console.log(error);
@@ -121,6 +121,7 @@ exports.signUp = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  console.log("ENTRO EN LOGIN")
   const email = req.body.email;
   const pass = SHA256(req.body.pass);
   //SELECT que nos lleva hasta la tabla usuario

@@ -4,6 +4,7 @@ const loginController = require('../controllers/loginController');
 
 //OK
 router.post('/signup', loginController.signUp);
+router.post('/signup', loginController.login);
 
 //OK
 router.post('/login', loginController.login);
