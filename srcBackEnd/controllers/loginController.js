@@ -78,7 +78,6 @@ exports.signUp = async (req, res, next) => {
   const userName = req.body.name;
   const photo = req.body.photo;
 
-  console.log('PRUEBA', email, pass, name, userName, photo);
 
   //Validamos los campos user y password
   if (isValidUserPass(email, pass, res)) {
@@ -175,11 +174,13 @@ exports.logout = async (req, res) => {
 
 exports.isLogged = async (req, res, next) => {
   const authorization = req.headers.authorization;
+  console.log(authorization)
 
   if (authorization) {
     const token = authorization.split(' ')[1];
-
+    console.log("TOKEN", token)
     const payload = jwt.decode(token);
+    console.log(payload)
     if (!payload) {
       res.user = false;
       next();

@@ -1,0 +1,6 @@
+
+HACER CAMBIOS EN LA BASE DE DATOS AWS Y EN LA COPIA DE SEGURIDAD
+
+UPDATE TablaPrincipal SET IdCategoria=3  WHERE IdCategoria=4;
+UPDATE TablaCategoria SET Categoria='Recetas de Carne' WHERE IdCategoria=3;
+UPDATE TablaCategoria SET Categoria='---' WHERE IdCategoria=4;

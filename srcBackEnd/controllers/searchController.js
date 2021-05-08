@@ -8,39 +8,39 @@ exports.searchPrefs = async (req, res) => {
     ingredients: [],
     bannedCategories: [
       {
-        id: 1,
+        id: 3,
         category: 'meat',
         title: 'Carne',
         value: false,
       },
       {
-        id: 2,
+        id: 13,
         category: 'fish',
         title: 'Pescado',
         value: false,
       },
       {
-        id: 3,
+        id: 10,
         category: 'shellfish',
         title: 'Marisco',
         value: false,
       },
       {
-        id: 4,
+        id: 8,
+        category: 'dairyAndEggs',
+        title: 'Lácteos y huevos',
+        value: false,
+      },
+      {
+        id: 17,
         category: 'vegetable',
-        title: 'Vegetales',
+        title: 'Verduras',
         value: false,
       },
       {
-        id: 5,
-        category: 'dairyProducts',
-        title: 'Lácteos',
-        value: false,
-      },
-      {
-        id: 6,
-        category: 'eggs',
-        title: 'Huevos',
+        id: 11,
+        category: 'breadAndPastry',
+        title: 'Pan y bollería',
         value: false,
       },
     ],
@@ -140,40 +140,47 @@ exports.searchPrefs = async (req, res) => {
   };
 
   const idUser = res.user;
-
+  console.log('USER', idUser);
   if (!idUser) {
+    console.log('NO REGISTRADO');
     res.send({
       OK: 1,
       searchPreferences: defaultPreferences,
       logged: false,
     });
-  }
-  const categories = await getBannedCategories(idUser);
-  const ingredients = await getBannedIngredients(idUser);
+  } else {
+    const categories = await getBannedCategories(idUser);
+    const ingredients = await getBannedIngredients(idUser);
 
-  const bannedCategories = defaultPreferences.bannedCategories.map((cat) => {
-    categories.map((ban) => {
-      if (ban.idCategory === cat.id) {
-        cat.value = true;
-      }
+    const bannedCategories = await defaultPreferences.bannedCategories.map(
+      (cat) => {
+        categories.map((ban) => {
+          if (ban.idCategory === cat.id) {
+            cat.value = true;
+          }
+        });
+        return cat;
+      },
+    );
+
+    const bannedIngredients = ingredients
+      ? ingredients.map((el) => {
+          return { idIngredient: el.idIngredient, title: el.title };
+        })
+      : [];
+
+    const newPreferences = {
+      ...defaultPreferences,
+      bannedCategories,
+      bannedIngredients,
+    };
+    console.log("OK", newPreferences)
+    res.json({
+      OK: 1,
+      searchPreferences: newPreferences,
+      logged: true,
     });
-    return cat;
-  });
-
-  // TODO: CUIDADO CUANDO NO HAY INGREDIENTES BANEADOS!!!!!!!!!
-  const bannedIngredients = ingredients
-    ? ingredients.map((el) => {
-        return { idIngredient: el.idIngredient, title: el.title };
-      })
-    : [];
-
-  const newPreferences = {
-    ...defaultPreferences,
-    bannedIngredients,
-    logged: true,
-  };
-
-  res.send(newPreferences);
+  }
 };
 
 exports.search = (req, res) => {

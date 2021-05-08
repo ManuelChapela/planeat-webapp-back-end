@@ -111,6 +111,8 @@ exports.updateUserBannedCategories = async (req, res) => {
   const { idUser } = res.user;
   const bannedObj = req.body.bannedObj;
 
+  console.log("TESTTT", res.user)
+
   //Para hacer el update vamos a borrar primero todo lo que hay del usuario
   const del = await delBannedCategories(idUser).catch((error) => {
     res.status(500).send({

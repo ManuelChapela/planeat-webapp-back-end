@@ -41,21 +41,21 @@ exports.delBannedCategories = async (idUser) => {
 };
 
 exports.getBannedCategories = async (idUser) => {
-    const sql = 'SELECT * FROM UserBannedCategories WHERE idUser = ?';
-    const values = [idUser];
+  const sql = 'SELECT * FROM UserBannedCategories WHERE idUser = ?';
+  const values = [idUser];
 
-    try {
-      const results = await doQuery(sql, values);
-      console.log('SELECT:', results);
-      return results;
-    } catch (error) {
-      console.log(error);
-    }
-}
-
+  try {
+    const results = await doQuery(sql, values);
+    console.log('SELECT:', results);
+    return results;
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 exports.getBannedIngredients = async (idUser) => {
-  const sql = 'SELECT * FROM UserBannedIngredients as U, Ingredients as I WHERE U.idUser = ? AND U.idIngredient = I.id';
+  const sql =
+    'SELECT * FROM UserBannedIngredients as U, TablaIngredientes as I WHERE U.idUser = ? AND I.idIngrediente = U.idIngredient';
   const values = [idUser];
 
   try {
@@ -76,7 +76,7 @@ exports.addFav = async (idUser, idRecipe, res) => {
     res.status(200).send({
       OK: 1,
       message: `Se ha añadido el favorito.`,
-      idFav: results.insertId,
+      idRecipe: idRecipe,
     });
   } catch (error) {
     console.log(error);
@@ -109,7 +109,7 @@ exports.delFav = async (idUser, idRecipe, res) => {
       res.status(200).send({
         OK: 1,
         message: `Se ha eliminado el favorito.`,
-        idFav: idRecipe,
+        idRecipe: idRecipe,
         //idFav: results.insertId,
       });
     } else {
@@ -158,17 +158,17 @@ exports.delBannedIngredients = async (idUser) => {
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 exports.saveBannedIngredients = async (bannedIngredients, idUser) => {
   const values = [];
-  console.log("BANNED",bannedIngredients)
-  bannedIngredients
-    .map((el) => {
-      values.push([el.idIngredient, idUser]);
-    });
+  console.log('BANNED', bannedIngredients);
+  bannedIngredients.map((el) => {
+    values.push([el.idIngredient, idUser]);
+  });
 
-  const sql = 'INSERT INTO UserBannedIngredients (idIngredient, idUser) VALUES ? ';
+  const sql =
+    'INSERT INTO UserBannedIngredients (idIngredient, idUser) VALUES ? ';
 
   try {
     if (values.length !== 0) {
