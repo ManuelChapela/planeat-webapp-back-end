@@ -144,8 +144,8 @@ exports.searchPrefs = async (req, res) => {
   if (!idUser) {
     res.send({
       OK: 1,
-      logged: false,
       searchPreferences: defaultPreferences,
+      logged: false,
     });
   }
   const categories = await getBannedCategories(idUser);
@@ -159,13 +159,18 @@ exports.searchPrefs = async (req, res) => {
     });
     return cat;
   });
-  const bannedIngredients = ingredients.map((el) => {
-    return { idIngredient: el.idIngredient, title: el.title };
-  });
+
+  // TODO: CUIDADO CUANDO NO HAY INGREDIENTES BANEADOS!!!!!!!!!
+  const bannedIngredients = ingredients
+    ? ingredients.map((el) => {
+        return { idIngredient: el.idIngredient, title: el.title };
+      })
+    : [];
 
   const newPreferences = {
     ...defaultPreferences,
     bannedIngredients,
+    logged: true,
   };
 
   res.send(newPreferences);

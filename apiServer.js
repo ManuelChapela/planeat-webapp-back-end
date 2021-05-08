@@ -50,8 +50,8 @@ server.use('/search', isLogged);
 server.use('/search', searchRouter);
 
 
-/* // ENDPOINT TEMPORAL PARA AUTOCOMPLETADO
-server.get('/auto', autocompletado) */
+/* // ENDPOINT TEMPORAL PARA AUTOCOMPLETADO*/
+server.get('/auto/:search', autocompletado) 
 
 server.listen(PORT, () => {
   console.log(`API server running at http://${HTTP.host}:${PORT}`);

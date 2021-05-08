@@ -18,17 +18,17 @@ const isValidPassword = (password) => {
       message: 'password cannot be empty',
     };
   const validLong = password.length > 7 ? true : false;
-  const validMin = /[a-z]+/.test(password);
+  /* const validMin = /[a-z]+/.test(password);
   const validMay = /[A-Z]+/.test(password);
   const validNum = /[0-9]+/.test(password);
-  const validSpecial = /[@#$%&]+/.test(password);
+  const validSpecial = /[@#$%&]+/.test(password); */
 
   if (!validLong)
     return {
       OK: false,
-      message: 'La contraseña debe ser de al menos 8 caracteres.',
+      message: 'al menos 8 caracteres.',
     };
-  else if (!validMin)
+  /* else if (!validMin)
     return {
       OK: false,
       message: 'La contraseña debe contener minúsculas.',
@@ -44,26 +44,27 @@ const isValidPassword = (password) => {
     return {
       OK: false,
       message: 'La contraseña debe contener un carácter especial (@#$%&)',
-    };
-  else return { OK: true };
+    }; */ else
+    return { OK: true };
 };
 
 const isValidUserPass = (user, password, res) => {
+  let response = { OK: 1 };
   if (!isValidUser(user)) {
-    res.status(422).send({
-      OK: 0,
-      error: 422,
-      message: `'user' is not a valid email`,
-    });
-    return false;
+    response.OK = 0;
+    response.error = 422;
+    response.messageUser = 'Email no válido prueba otra vez';
   }
   const boolPass = isValidPassword(password);
   if (!boolPass.OK) {
-    res.status(422).send({
-      OK: 0,
-      error: 422,
-      message: boolPass.message,
-    });
+    response.OK = 0;
+    response.error = 422;
+    response.messagePass = boolPass.message;
+  }
+
+  if (!response.OK) {
+    console.log(response)
+    res.status(422).send(response);
     return false;
   }
 
@@ -96,14 +97,14 @@ exports.signUp = async (req, res, next) => {
         res.status(409).send({
           OK: 0,
           status: 409,
-          message: 'El usuario ya está registrado',
+          messageUser: 'El usuario ya está registrado',
         });
       } else {
         sql = `INSERT INTO Users (secret, email, pass, userName, boolFavCalendar, photo, name) VALUES (?)`;
         values = [[secret, email, pass, userName, false, photo, name]];
         response = await doQuery(sql, values);
         next();
-/*         res.send({
+        /*         res.send({
           OK: 1,
           message: 'Usuario creado',
           usuario: response.insertId,
@@ -121,7 +122,7 @@ exports.signUp = async (req, res, next) => {
 };
 
 exports.login = async (req, res) => {
-  console.log("ENTRO EN LOGIN")
+  console.log('ENTRO EN LOGIN');
   const email = req.body.email;
   const pass = SHA256(req.body.pass);
   //SELECT que nos lleva hasta la tabla usuario

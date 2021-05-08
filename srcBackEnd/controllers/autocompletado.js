@@ -1,20 +1,22 @@
-/* const mysql = require('mysql');
+const mysql = require('mysql');
 require('dotenv').config();
-const dbConnection = mysql.createConnection({
+const dbConnection = require('../utilities/db');
+/* const dbConnection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: 'IngredientsTest',
-});
-
+  database: 'planeat',
+}); */
+/* 
 dbConnection.connect(function (err) {
   if (err) {
     console.error('error connecting: ' + err.stack);
     return;
   }
 
+
   console.log('DB connected as id ' + dbConnection.threadId);
-});
+}); */
 
 const doQuery = (query, values) => {
   return new Promise((resolve, reject) => {
@@ -26,11 +28,13 @@ const doQuery = (query, values) => {
 };
 
 exports.autocompletado = async (req, res) => {
-  const { search } = req.body;
+  const { search } = req.params;
+
+  console.log("probando",search)
 
   console.log(req.body);
 
-  const sql = `SELECT * FROM IngredientsTest WHERE title LIKE '%${search}%' `;
+  const sql = `SELECT * FROM TablaIngredientes WHERE ingrediente LIKE '%${search}%' `;
 
   const response = await doQuery(sql);
 
@@ -38,4 +42,3 @@ exports.autocompletado = async (req, res) => {
     response,
   });
 };
- */
