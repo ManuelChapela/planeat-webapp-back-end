@@ -142,7 +142,7 @@ exports.searchPrefs = async (req, res) => {
   const idUser = res.user;
   console.log('USER', idUser);
   if (!idUser) {
-    console.log('NO REGISTRADO');
+    console.log('NO REGISTRADO'); 
     res.send({
       OK: 1,
       searchPreferences: defaultPreferences,
