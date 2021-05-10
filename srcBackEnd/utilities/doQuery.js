@@ -8,4 +8,13 @@ const doQuery = (query, values) => {
   });
 };
 
+const relifeDB = async () => {
+  dbConnection.ping();
+  console.log("PING")
+};
+
+setInterval(() => {
+  relifeDB();
+}, 10000);
+
 exports.doQuery = doQuery;

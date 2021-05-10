@@ -1,5 +1,6 @@
 const path = require('path');
 const mysql = require('mysql');
+
 require('dotenv').config();
 const dbConnection = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -13,7 +14,6 @@ dbConnection.connect(function (err) {
     console.error('error connecting: ' + err.stack);
     return;
   }
-
   console.log('DB connected as id ' + dbConnection.threadId);
 });
 
