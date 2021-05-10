@@ -165,7 +165,7 @@ exports.searchPrefs = async (req, res) => {
 
     const bannedIngredients = ingredients
       ? ingredients.map((el) => {
-          return { idIngredient: el.idIngredient, title: el.title };
+          return { idIngredient: el.idIngredient, title: el.Ingrediente };
         })
       : [];
 
