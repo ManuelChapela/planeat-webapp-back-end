@@ -10,11 +10,11 @@ const doQuery = (query, values) => {
 
 const relifeDB = async () => {
   dbConnection.ping();
-  console.log("PING")
+  console.log("PING DB")
 };
 
 setInterval(() => {
   relifeDB();
-}, 10000);
+}, 60000);
 
 exports.doQuery = doQuery;
