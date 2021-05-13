@@ -246,7 +246,7 @@ exports.search = async (req, res) => {
 
   const sqlBannedIng =
     bannedIngredients.length !== 0
-      ? `AND tp.IdReceta IN 
+      ? `AND tp.IdReceta NOT IN 
           (
 	        SELECT DISTINCT tri2.IdReceta
                FROM TablaRecetaIngredientes AS tri2
@@ -294,19 +294,6 @@ exports.search = async (req, res) => {
         ')'
       : ' ';
 
-  /*   const sqlCost =
-    cost.filter((el) => el.value).length !== 0
-      ? ' AND (tpr.idPreferencias = ' +
-        cost
-          .filter((el) => el.value)
-          .map((el) => {
-            sqlArray.push(el.id);
-            return '?';
-          }) +
-        ' OR tpr.idPreferencias NOT IN (31,111))'
-      : ' ';
- */
-
   let sqlTime = '';
   const timeSelection = time.filter((el) => el.value);
   if (timeSelection.length !== 0) {
@@ -336,17 +323,6 @@ exports.search = async (req, res) => {
     sqlDaily +
     'GROUP BY tp.IdReceta ORDER BY tp.IdReceta, ti.Ingrediente';
 
-  /* 
-          sql = `SELECT tp.idReceta, CONCAT("[",GROUP_CONCAT(tpr.Ingrediente),"]") as ingredients FROM TablaPrincipal as tp
-              RIGHT OUTER JOIN TablaRecetaIngredientes as tri
-              ON tp.IdReceta = tri.IdReceta
-              INNER JOIN TablaRecetaIngredientes as tpr      
-		        	ON tpr.IdReceta=tp.IdReceta 
-				INNER JOIN TablaIngredientes as ti
-					ON tpr.IdIngrediente = ti.IdIngrediente
-                    WHERE 1=1  AND tri.idIngrediente IN (1) 
-                    GROUP BY tp.idReceta;`;
- */
   console.log(sql, sqlArray);
   const result = await doQuery(sql, sqlArray);
   const recipes = [];
@@ -388,47 +364,10 @@ exports.search = async (req, res) => {
     recipes.push(recipe);
   });
 
-  /*
-    {
-      mainTitle: 'comida', TABLA TIPO
-      title: 'Espagueti Boloñesa', NOMBRE RECETA
-      type: 'Pasta', TABLA CATEGORIA
-      ingredients: ['tomate', 'aceite', 'ajo', 'espaguetis', 'albahaca'],
-      price: 'Barato', 
-      time: '15'
-      img:
-        'https://www.laespanolaaceites.com/wp-content/uploads/2019/05/espaguetis-a-la-bolonesa-1080x671.jpg',
-    }
-
-    */
-  /*     const response = [];
-
-    if (result.length !== 0) {
-      const responseEl = {};
-      result.map (el=> {
-        title: el.Nombre,
-
-
-      })
-    } */
 
   res.send({
     OK: 1,
     message: 'Búsqueda recetas',
     recipes: recipes,
   });
-  /*
-SELECT tp.* , tri.* 
-FROM TablaPrincipal as tp, TablaRecetaIngredientes as tri, TablaPreferenciasReceta as tpr
-WHERE tri.idIngrediente IN (1223, 1034)
- AND tp.IdCategoria NOT IN (3,10,13)
- AND tri.idIngrediente NOT IN(90,1008)
- AND tpr.IdPreferencias IN (91) #AND tpr.IdPreferencias=31
- AND tp.idTiempo IN (1,2,3)
- AND tp.IdTipo = 2
- AND tri.idReceta = tp.idReceta
- AND tpr.IdReceta = tp.idReceta;
- 
-
-  */
 };
