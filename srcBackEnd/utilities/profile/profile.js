@@ -155,14 +155,17 @@ exports.getFavsMiddle = async (req, res, next) => {
   if (idUser) {
     try {
       const results = await doQuery(sql, idUser);
-      console.log(results);
+      console.log("RESULTS", results);
       res.favs = results;
+      console.log("FAAAVS!!!", res.favs)
       next();
     } catch (error) {
       console.log(error);
     }
   } else {
+    console.log("NO HAY USUARIO")
     res.favs = [];
+    next();
   }
 };
 

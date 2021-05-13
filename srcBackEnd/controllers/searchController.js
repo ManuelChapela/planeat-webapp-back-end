@@ -5,6 +5,14 @@ const {
   getBannedIngredients,
 } = require('../utilities/profile/profile');
 
+
+//Función para colocar en orden alfabético un array y quitar duplicados
+function uniq(a) {
+  return a.sort().filter(function (item, pos, ary) {
+    return !pos || item != ary[pos - 1];
+  });
+}
+
 exports.searchPrefs = async (req, res) => {
   const defaultPreferences = {
     ingredients: [],
@@ -206,27 +214,51 @@ exports.search = async (req, res) => {
     daily,
   });
 
-  console.log("FAV", res.fav) //estos favoritos hay que unirlos con la búsqueda
+  console.log('FAVV', res.favs); //estos favoritos hay que unirlos con la búsqueda
 
-  let sql = `SELECT tp.*, tri.*, COUNT(*) as contador FROM TablaPrincipal as tp
-              INNER JOIN TablaRecetaIngredientes as tri
-              ON tp.IdReceta = tri.IdReceta
-              INNER JOIN TablaPreferenciasReceta as tpr      
-		        	ON tpr.IdReceta=tp.IdReceta`;
+  let sql = `SELECT DISTINCT tp.IdReceta AS idReceta, tp.idTipo as idTipo, GROUP_CONCAT(ti.Ingrediente) as ingredients,
+             tp.Nombre as Nombre, tp.idCategoria as idCategoria,
+             tp.idTiempo as idTiempo, tp.Imagen as Imagen, tpr.IdPreferencias
+                FROM TablaPrincipal AS tp
+                JOIN TablaRecetaIngredientes AS tri
+                	ON tp.IdReceta = tri.IdReceta
+                JOIN TablaIngredientes AS ti
+                	ON tri.IdIngrediente = ti.IdIngrediente
+                JOIN TablaPreferenciasReceta AS tpr
+                  ON tp.IdReceta = tpr.IdReceta
+                WHERE 1=1 `;
   const sqlArray = [];
-  sql += ' WHERE 1=1 ';
-
   const sqlIngredients =
     ingredients.length !== 0
-      ? ' AND tri.idIngrediente IN (' +
+      ? `AND tp.IdReceta IN 
+          (
+	        SELECT DISTINCT tri2.IdReceta
+               FROM TablaRecetaIngredientes AS tri2
+               WHERE tri2.IdIngrediente IN (` +
         ingredients
           .map((el) => {
             sqlArray.push(el.idIngredient);
             return '?';
           })
           .join(',') +
-        ')'
-      : '';
+        '))'
+      : ' ';
+
+  const sqlBannedIng =
+    bannedIngredients.length !== 0
+      ? `AND tp.IdReceta IN 
+          (
+	        SELECT DISTINCT tri2.IdReceta
+               FROM TablaRecetaIngredientes AS tri2
+               WHERE tri2.IdIngrediente IN (` +
+        bannedIngredients
+          .map((el) => {
+            sqlArray.push(el.idIngredient);
+            return '?';
+          })
+          .join(',') +
+        '))'
+      : ' ';
 
   const sqlBannedCat =
     bannedCategories.filter((el) => el.value).length !== 0
@@ -241,17 +273,12 @@ exports.search = async (req, res) => {
         ') '
       : ' ';
 
-  const sqlBannedIng =
-    bannedIngredients.length !== 0
-      ? ' AND tri.idIngrediente NOT IN (' +
-        bannedIngredients
-          .map((el) => {
-            sqlArray.push(el.idIngredient);
-            return '?';
-          })
-          .join(',') +
-        ')'
-      : '';
+  let sqlCost = '';
+  const costSelection = cost.filter((el) => el.value);
+  if (costSelection.length !== 0) {
+    if (costSelection[0].id == 31) sqlCost += ',31';
+    else if (costSelection[0].id == 111) sqlCost += ',31,111';
+  }
 
   const sqlCategories =
     categories.filter((el) => el.value).length !== 0
@@ -263,10 +290,11 @@ exports.search = async (req, res) => {
             return '?';
           })
           .join(',') +
+        sqlCost +
         ')'
       : ' ';
 
-  const sqlCost =
+  /*   const sqlCost =
     cost.filter((el) => el.value).length !== 0
       ? ' AND (tpr.idPreferencias = ' +
         cost
@@ -277,15 +305,14 @@ exports.search = async (req, res) => {
           }) +
         ' OR tpr.idPreferencias NOT IN (31,111))'
       : ' ';
+ */
 
   let sqlTime = '';
   const timeSelection = time.filter((el) => el.value);
   if (timeSelection.length !== 0) {
     if (timeSelection[0].id == 1) sqlTime += ' AND tp.idTiempo = 1';
-    if (timeSelection[0].id == 2)
-      sqlTime += ' AND (tp.idTiempo = 1 OR tp.idTiempo = 2)';
-    if (timeSelection[0].id == 3)
-      sqlTime += ' AND (tp.idTiempo = 1 OR tp.idTiempo = 2 OR tp.idTiempo = 3)';
+    if (timeSelection[0].id == 2) sqlTime += ' AND (tp.idTiempo IN (1,2))';
+    if (timeSelection[0].id == 3) sqlTime += ' AND (tp.idTiempo IN (1,2,3))';
   }
 
   const sqlDaily =
@@ -302,14 +329,14 @@ exports.search = async (req, res) => {
 
   sql +=
     sqlIngredients +
-    sqlBannedCat +
     sqlBannedIng +
+    sqlBannedCat +
     sqlCategories +
-    sqlCost +
     sqlTime +
-    sqlDaily + 'GROUP BY tp.IdReceta ORDER BY contador DESC';
+    sqlDaily +
+    'GROUP BY tp.IdReceta ORDER BY tp.IdReceta, ti.Ingrediente';
 
-/* 
+  /* 
           sql = `SELECT tp.idReceta, CONCAT("[",GROUP_CONCAT(tpr.Ingrediente),"]") as ingredients FROM TablaPrincipal as tp
               RIGHT OUTER JOIN TablaRecetaIngredientes as tri
               ON tp.IdReceta = tri.IdReceta
@@ -320,23 +347,61 @@ exports.search = async (req, res) => {
                     WHERE 1=1  AND tri.idIngrediente IN (1) 
                     GROUP BY tp.idReceta;`;
  */
-    const result = await doQuery(sql, sqlArray);
-    console.log('RESULT', result);
-    console.log(sql, sqlArray);
+  console.log(sql, sqlArray);
+  const result = await doQuery(sql, sqlArray);
+  const recipes = [];
+  result.map((el) => {
+    const recipe = {};
+    if (el.IdTipo === 1) recipe.mainTitle = 'Aperitivos y tapas';
+    else if (el.idCategoria === 2) recipe.type = 'Arroces y cereales';
+    else if (el.idCategoria === 3) recipe.type = 'Carnes';
+    else if (el.idCategoria === 5) recipe.type = 'Cocteles y bebidas';
+    else if (el.idCategoria === 6) recipe.type = 'Ensaladas';
+    else if (el.idCategoria === 7) recipe.type = 'Guisos y potajes';
+    else if (el.idCategoria === 8) recipe.type = 'Huevos y lacteos';
+    else if (el.idCategoria === 9) recipe.type = 'Legumbres';
+    else if (el.idCategoria === 10) recipe.type = 'Mariscos';
+    else if (el.idCategoria === 11) recipe.type = 'Pan y bollería';
+    else if (el.idCategoria === 12) recipe.type = 'Pasta';
+    else if (el.idCategoria === 13) recipe.type = 'Pescado';
+    else if (el.idCategoria === 14) recipe.type = 'Postres';
+    else if (el.idCategoria === 15) recipe.type = 'Salsas';
+    else if (el.idCategoria === 16) recipe.type = 'Sopas y cremas';
+    else if (el.idCategoria === 17) recipe.type = 'Verduras';
+
+    recipe.title = el.Nombre;
+
+    if (el.idTipo === 1) recipe.mainTitle = 'Desayuno';
+    else if (el.idTipo === 2) recipe.mainTitle = 'Comida';
+    else if (el.idTipo === 3) recipe.mainTitle = 'Cena';
+    else recipe.mainTitle = 'Otros';
+
+    if (el.idTiempo === 1) recipe.time = '10';
+    if (el.idTiempo === 2) recipe.time = '15';
+    if (el.idTiempo === 3) recipe.time = '30';
+
+    recipe.img = el.Imagen;
+    recipe.price = '******'; //NO SE HACER COMO SACAR TODAS LAS PREFERENCIAS DE LA RECETA
+
+    recipe.ingredients = uniq(el.ingredients.split(','));
+
+    recipes.push(recipe);
+  });
 
   /*
     {
-      mainTitle: 'comida',
-      title: 'Espagueti Boloñesa',
-      type: 'Pasta',
+      mainTitle: 'comida', TABLA TIPO
+      title: 'Espagueti Boloñesa', NOMBRE RECETA
+      type: 'Pasta', TABLA CATEGORIA
       ingredients: ['tomate', 'aceite', 'ajo', 'espaguetis', 'albahaca'],
-      price: 'Barato / 15 minutos',
+      price: 'Barato', 
+      time: '15'
       img:
         'https://www.laespanolaaceites.com/wp-content/uploads/2019/05/espaguetis-a-la-bolonesa-1080x671.jpg',
     }
 
     */
-/*     const response = [];
+  /*     const response = [];
 
     if (result.length !== 0) {
       const responseEl = {};
@@ -347,11 +412,10 @@ exports.search = async (req, res) => {
       })
     } */
 
-
   res.send({
     OK: 1,
     message: 'Búsqueda recetas',
-    recipes: result,
+    recipes: recipes,
   });
   /*
 SELECT tp.* , tri.* 
