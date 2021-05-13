@@ -206,7 +206,9 @@ exports.search = async (req, res) => {
     daily,
   });
 
-  let sql = `SELECT tp.*, tri.* FROM TablaPrincipal as tp
+  console.log("FAV", res.fav) //estos favoritos hay que unirlos con la búsqueda
+
+  let sql = `SELECT tp.*, tri.*, COUNT(*) as contador FROM TablaPrincipal as tp
               INNER JOIN TablaRecetaIngredientes as tri
               ON tp.IdReceta = tri.IdReceta
               INNER JOIN TablaPreferenciasReceta as tpr      
@@ -267,7 +269,7 @@ exports.search = async (req, res) => {
   const sqlCost =
     cost.filter((el) => el.value).length !== 0
       ? ' AND (tpr.idPreferencias = ' +
-        categories
+        cost
           .filter((el) => el.value)
           .map((el) => {
             sqlArray.push(el.id);
@@ -288,12 +290,14 @@ exports.search = async (req, res) => {
 
   const sqlDaily =
     daily.filter((el) => el.value).length !== 0
-      ? ' AND tp.idTipo = ' +
-        daily.filter((el) => el.value)
+      ? ' AND tp.idTipo IN (' +
+        daily
+          .filter((el) => el.value)
           .map((el) => {
             sqlArray.push(el.id);
-            return '?'; 
-          })
+            return '?';
+          }) +
+        ')'
       : ' ';
 
   sql +=
@@ -303,17 +307,52 @@ exports.search = async (req, res) => {
     sqlCategories +
     sqlCost +
     sqlTime +
-    sqlDaily;
+    sqlDaily + 'GROUP BY tp.IdReceta ORDER BY contador DESC';
 
+/* 
+          sql = `SELECT tp.idReceta, CONCAT("[",GROUP_CONCAT(tpr.Ingrediente),"]") as ingredients FROM TablaPrincipal as tp
+              RIGHT OUTER JOIN TablaRecetaIngredientes as tri
+              ON tp.IdReceta = tri.IdReceta
+              INNER JOIN TablaRecetaIngredientes as tpr      
+		        	ON tpr.IdReceta=tp.IdReceta 
+				INNER JOIN TablaIngredientes as ti
+					ON tpr.IdIngrediente = ti.IdIngrediente
+                    WHERE 1=1  AND tri.idIngrediente IN (1) 
+                    GROUP BY tp.idReceta;`;
+ */
+    const result = await doQuery(sql, sqlArray);
+    console.log('RESULT', result);
     console.log(sql, sqlArray);
-  const result = await doQuery(sql, sqlArray);
-  console.log('RESULT', result);
+
+  /*
+    {
+      mainTitle: 'comida',
+      title: 'Espagueti Boloñesa',
+      type: 'Pasta',
+      ingredients: ['tomate', 'aceite', 'ajo', 'espaguetis', 'albahaca'],
+      price: 'Barato / 15 minutos',
+      img:
+        'https://www.laespanolaaceites.com/wp-content/uploads/2019/05/espaguetis-a-la-bolonesa-1080x671.jpg',
+    }
+
+    */
+/*     const response = [];
+
+    if (result.length !== 0) {
+      const responseEl = {};
+      result.map (el=> {
+        title: el.Nombre,
+
+
+      })
+    } */
+
 
   res.send({
-    OK:1,
-    message: "Búsqueda recetas",
-    recipes: result
-  })
+    OK: 1,
+    message: 'Búsqueda recetas',
+    recipes: result,
+  });
   /*
 SELECT tp.* , tri.* 
 FROM TablaPrincipal as tp, TablaRecetaIngredientes as tri, TablaPreferenciasReceta as tpr

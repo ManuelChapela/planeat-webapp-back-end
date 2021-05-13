@@ -147,6 +147,25 @@ exports.getFavs = async (idUser, res) => {
   }
 };
 
+exports.getFavsMiddle = async (req, res, next) => {
+  const sql = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
+
+  idUser = res.user;
+  console.log('USER', idUser);
+  if (idUser) {
+    try {
+      const results = await doQuery(sql, idUser);
+      console.log(results);
+      res.favs = results;
+      next();
+    } catch (error) {
+      console.log(error);
+    }
+  } else {
+    res.favs = [];
+  }
+};
+
 exports.delBannedIngredients = async (idUser) => {
   const sql = 'DELETE FROM UserBannedIngredients WHERE idUser = ?';
   const values = [idUser];
