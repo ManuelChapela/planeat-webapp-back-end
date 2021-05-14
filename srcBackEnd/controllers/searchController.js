@@ -5,13 +5,78 @@ const {
   getBannedIngredients,
 } = require('../utilities/profile/profile');
 
-
 //Función para colocar en orden alfabético un array y quitar duplicados
 function uniq(a) {
   return a.sort().filter(function (item, pos, ary) {
     return !pos || item != ary[pos - 1];
   });
 }
+
+const transformResult = (result) => {
+  const recipes = [];
+  result.map((el) => {
+    const recipe = {};
+    if (el.IdTipo === 1) recipe.mainTitle = 'Aperitivos y tapas';
+    else if (el.idCategoria === 2) recipe.type = 'Arroces y cereales';
+    else if (el.idCategoria === 3) recipe.type = 'Carnes';
+    else if (el.idCategoria === 5) recipe.type = 'Cocteles y bebidas';
+    else if (el.idCategoria === 6) recipe.type = 'Ensaladas';
+    else if (el.idCategoria === 7) recipe.type = 'Guisos y potajes';
+    else if (el.idCategoria === 8) recipe.type = 'Huevos y lacteos';
+    else if (el.idCategoria === 9) recipe.type = 'Legumbres';
+    else if (el.idCategoria === 10) recipe.type = 'Mariscos';
+    else if (el.idCategoria === 11) recipe.type = 'Pan y bollería';
+    else if (el.idCategoria === 12) recipe.type = 'Pasta';
+    else if (el.idCategoria === 13) recipe.type = 'Pescado';
+    else if (el.idCategoria === 14) recipe.type = 'Postres';
+    else if (el.idCategoria === 15) recipe.type = 'Salsas';
+    else if (el.idCategoria === 16) recipe.type = 'Sopas y cremas';
+    else if (el.idCategoria === 17) recipe.type = 'Verduras';
+
+    recipe.title = el.Nombre;
+
+    if (el.idTipo === 1) recipe.mainTitle = 'Desayuno';
+    else if (el.idTipo === 2) recipe.mainTitle = 'Comida';
+    else if (el.idTipo === 3) recipe.mainTitle = 'Cena';
+    else recipe.mainTitle = 'Otros';
+
+    if (el.idTiempo === 1) recipe.time = '10';
+    if (el.idTiempo === 2) recipe.time = '15';
+    if (el.idTiempo === 3) recipe.time = '30';
+
+    recipe.img = el.Imagen;
+    recipe.price = '******'; //NO SE HACER COMO SACAR TODAS LAS PREFERENCIAS DE LA RECETA
+
+    recipe.ingredients = uniq(el.ingredients.split(','));
+
+    recipes.push(recipe);
+  });
+
+  return recipes;
+};
+
+const transformDetail = (result) => {
+  console.log('RESULT', result[0]);
+  const recipe = {};
+  recipe.id = result[0].IdReceta;
+  recipe.time = result[0].Tiempo;
+  recipe.steps = result[0].pasos ? JSON.parse(result[0].pasos) : '';
+  const prefs = result[0].prefs ? result[0].prefs.split(',') : [];
+
+  if (prefs.includes('31')) recipe.costs = 'Barato';
+  else recipe.costs = 'Medio';
+  const recipes = [];
+  Object.keys(recipe.steps).map(
+    (step) => (recipes[parseInt(step) - 1] = recipe.steps[step]),
+  );
+  recipe.steps = recipes;
+
+  recipe.ingredients = result[0].Ingredientes
+    ? result[0].Ingredientes.split(',')
+    : [];
+
+  return recipe;
+};
 
 exports.searchPrefs = async (req, res) => {
   const defaultPreferences = {
@@ -204,17 +269,7 @@ exports.search = async (req, res) => {
     daily,
   } = req.body;
 
-  console.log({
-    ingredients,
-    bannedCategories,
-    bannedIngredients,
-    categories,
-    cost,
-    time,
-    daily,
-  });
-
-  console.log('FAVV', res.favs); //estos favoritos hay que unirlos con la búsqueda
+  console.log('FAVS', res.favs); //estos favoritos hay que unirlos con la búsqueda
 
   let sql = `SELECT DISTINCT tp.IdReceta AS idReceta, tp.idTipo as idTipo, GROUP_CONCAT(ti.Ingrediente) as ingredients,
              tp.Nombre as Nombre, tp.idCategoria as idCategoria,
@@ -227,7 +282,9 @@ exports.search = async (req, res) => {
                 JOIN TablaPreferenciasReceta AS tpr
                   ON tp.IdReceta = tpr.IdReceta
                 WHERE 1=1 `;
+
   const sqlArray = [];
+
   const sqlIngredients =
     ingredients.length !== 0
       ? `AND tp.IdReceta IN 
@@ -324,50 +381,59 @@ exports.search = async (req, res) => {
     'GROUP BY tp.IdReceta ORDER BY tp.IdReceta, ti.Ingrediente';
 
   console.log(sql, sqlArray);
-  const result = await doQuery(sql, sqlArray);
-  const recipes = [];
-  result.map((el) => {
-    const recipe = {};
-    if (el.IdTipo === 1) recipe.mainTitle = 'Aperitivos y tapas';
-    else if (el.idCategoria === 2) recipe.type = 'Arroces y cereales';
-    else if (el.idCategoria === 3) recipe.type = 'Carnes';
-    else if (el.idCategoria === 5) recipe.type = 'Cocteles y bebidas';
-    else if (el.idCategoria === 6) recipe.type = 'Ensaladas';
-    else if (el.idCategoria === 7) recipe.type = 'Guisos y potajes';
-    else if (el.idCategoria === 8) recipe.type = 'Huevos y lacteos';
-    else if (el.idCategoria === 9) recipe.type = 'Legumbres';
-    else if (el.idCategoria === 10) recipe.type = 'Mariscos';
-    else if (el.idCategoria === 11) recipe.type = 'Pan y bollería';
-    else if (el.idCategoria === 12) recipe.type = 'Pasta';
-    else if (el.idCategoria === 13) recipe.type = 'Pescado';
-    else if (el.idCategoria === 14) recipe.type = 'Postres';
-    else if (el.idCategoria === 15) recipe.type = 'Salsas';
-    else if (el.idCategoria === 16) recipe.type = 'Sopas y cremas';
-    else if (el.idCategoria === 17) recipe.type = 'Verduras';
 
-    recipe.title = el.Nombre;
+  try {
+    const result = await doQuery(sql, sqlArray);
 
-    if (el.idTipo === 1) recipe.mainTitle = 'Desayuno';
-    else if (el.idTipo === 2) recipe.mainTitle = 'Comida';
-    else if (el.idTipo === 3) recipe.mainTitle = 'Cena';
-    else recipe.mainTitle = 'Otros';
+    const recipes = transformResult(result);
 
-    if (el.idTiempo === 1) recipe.time = '10';
-    if (el.idTiempo === 2) recipe.time = '15';
-    if (el.idTiempo === 3) recipe.time = '30';
+    res.send({
+      OK: 1,
+      message: 'Búsqueda recetas',
+      recipes: recipes,
+    });
+  } catch (error) {
+    res.status(500).send({
+      OK: 0,
+      message: error.message,
+    });
+  }
+};
 
-    recipe.img = el.Imagen;
-    recipe.price = '******'; //NO SE HACER COMO SACAR TODAS LAS PREFERENCIAS DE LA RECETA
+exports.searchById = async (req, res) => {
+  console.log('FAVS', res.favs); //estos favoritos hay que unirlos con la búsqueda
 
-    recipe.ingredients = uniq(el.ingredients.split(','));
+  const { id } = req.params;
 
-    recipes.push(recipe);
-  });
+  const sql = `SELECT tp.IdReceta, tt.Tiempo, tt.Tiempo, tp.Ingredientes,
+               JSON_OBJECTAGG(tpa.Paso, tpa.Instruccion) as pasos, GROUP_CONCAT(DISTINCT tpa.Paso) as idPasos,
+               GROUP_CONCAT(DISTINCT tpref.IdPreferencias) as prefs
+                FROM TablaPrincipal AS tp
+                INNER JOIN TablaTiempo AS tt
+                  ON tp.IdTiempo = tt.IdTiempo
+                INNER JOIN TablaPasos as tpa
+                  ON tp.IdReceta = tpa.IdReceta
+                INNER JOIN TablaPreferenciasReceta AS tpr
+                  ON tp.IdReceta = tpr.IdReceta
+                INNER JOIN TablaPreferencias as tpref
+                  ON tpref.IdPreferencias = tpr.IdPreferencias
+                WHERE tp.IdReceta = ? AND tpa.IdPaso<18328
+                GROUP BY tp.IdReceta ORDER BY tpa.idPaso`;
+  try {
+    const result = await doQuery(sql, id);
+    console.log(result);
 
+    const recipe = transformDetail(result);
 
-  res.send({
-    OK: 1,
-    message: 'Búsqueda recetas',
-    recipes: recipes,
-  });
+    res.send({
+      OK: 1,
+      message: 'Detalle receta',
+      recipe,
+    });
+  } catch (error) {
+    res.status(500).send({
+      OK: 0,
+      message: error.message,
+    });
+  }
 };

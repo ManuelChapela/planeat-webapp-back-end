@@ -128,7 +128,7 @@ exports.delFav = async (idUser, idRecipe, res) => {
 };
 
 exports.getFavs = async (idUser, res) => {
-  const sql = `SELECT * FROM Recipes INNER JOIN Favs ON Recipes.id = Favs.idUser WHERE Favs.idUser=?`;
+  const sql = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
 
   try {
     const results = await doQuery(sql, idUser);
@@ -149,7 +149,7 @@ exports.getFavs = async (idUser, res) => {
 
 exports.getFavsMiddle = async (req, res, next) => {
   const sql = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
-
+  console.log("AQUIIII!!!!!!")
   idUser = res.user;
   console.log('USER', idUser);
   if (idUser) {
