@@ -68,6 +68,7 @@ const transformResult = (result, favs) => {
 const transformDetail = (result, favs) => {
   console.log('RESULT', result[0]);
   const recipe = {};
+  recipe.title = result[0].Nombre;
   recipe.id = result[0].IdReceta;
   recipe.time = result[0].Tiempo;
   recipe.steps = result[0].pasos ? JSON.parse(result[0].pasos) : '';
@@ -85,7 +86,7 @@ const transformDetail = (result, favs) => {
     ? result[0].Ingredientes.split(',')
     : [];
 
-  recipe.fav = res.favs.idReceta === recipe.id ? true: false;
+  recipe.fav = favs.idReceta === recipe.id ? true: false;
 
   return recipe;
 };
@@ -421,7 +422,7 @@ exports.searchById = async (req, res) => {
 
   const { id } = req.params;
 
-  const sql = `SELECT tp.IdReceta, tt.Tiempo, tt.Tiempo, tp.Ingredientes,
+  const sql = `SELECT tp.IdReceta, tt.Tiempo, tt.Tiempo, tp.Ingredientes, tp.Nombre,
                JSON_OBJECTAGG(tpa.Paso, tpa.Instruccion) as pasos, GROUP_CONCAT(DISTINCT tpa.Paso) as idPasos,
                GROUP_CONCAT(DISTINCT tpref.IdPreferencias) as prefs
                 FROM TablaPrincipal AS tp
