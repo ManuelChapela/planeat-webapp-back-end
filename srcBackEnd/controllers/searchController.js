@@ -45,9 +45,15 @@ const transformResult = (result) => {
     if (el.idTiempo === 3) recipe.time = '30';
 
     recipe.img = el.Imagen;
-    recipe.price = '******'; //NO SE HACER COMO SACAR TODAS LAS PREFERENCIAS DE LA RECETA
 
     recipe.ingredients = uniq(el.ingredients.split(','));
+
+    const prefs = el.prefs ? el.prefs.split(',') : [];
+
+    if (prefs.includes('31')) recipe.price = 'Barato';
+    else recipe.price = 'Medio';
+
+    recipe.id = el.idReceta;
 
     recipes.push(recipe);
   });
@@ -271,9 +277,9 @@ exports.search = async (req, res) => {
 
   console.log('FAVS', res.favs); //estos favoritos hay que unirlos con la búsqueda
 
-  let sql = `SELECT DISTINCT tp.IdReceta AS idReceta, tp.idTipo as idTipo, GROUP_CONCAT(ti.Ingrediente) as ingredients,
+  let sql = `SELECT DISTINCT tp.IdReceta AS idReceta, tp.idTipo as idTipo, GROUP_CONCAT(DISTINCT ti.Ingrediente order by ti.Ingrediente ASC) as ingredients,
              tp.Nombre as Nombre, tp.idCategoria as idCategoria,
-             tp.idTiempo as idTiempo, tp.Imagen as Imagen, tpr.IdPreferencias
+             tp.idTiempo as idTiempo, tp.Imagen as Imagen, GROUP_CONCAT(DISTINCT tpr.IdPreferencias) as prefs
                 FROM TablaPrincipal AS tp
                 JOIN TablaRecetaIngredientes AS tri
                 	ON tp.IdReceta = tri.IdReceta
@@ -387,12 +393,16 @@ exports.search = async (req, res) => {
 
     const recipes = transformResult(result);
 
+    //console.log('RESULT:', result);
+    console.log('RECIPES:', recipes);
+
     res.send({
       OK: 1,
       message: 'Búsqueda recetas',
       recipes: recipes,
     });
   } catch (error) {
+    console.error('ERROR BUSQUEDA:', error);
     res.status(500).send({
       OK: 0,
       message: error.message,
