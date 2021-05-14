@@ -20,5 +20,9 @@ router.route('/savebaning').patch(userController.updateUserBannedIngredients);
 router.route('/addfav').post(userController.addUserFav);
 router.route('/delfav').post(userController.delUserFav);
 router.route('/fav').get(userController.getUserFav);
+/* 
+router.route('/addnofav').post(userController.addUserNoFav);
+router.route('/delnofav').post(userController.delUserNoFav);
+router.route('/nofav').get(userController.getUserNoFav); */
 
 module.exports = router;

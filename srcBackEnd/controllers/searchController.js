@@ -88,6 +88,8 @@ const transformDetail = (result, favs) => {
 
   recipe.fav = favs.idReceta === recipe.id ? true: false;
 
+  recipe.img = result[0].Imagen;
+
   return recipe;
 };
 
@@ -422,7 +424,7 @@ exports.searchById = async (req, res) => {
 
   const { id } = req.params;
 
-  const sql = `SELECT tp.IdReceta, tt.Tiempo, tt.Tiempo, tp.Ingredientes, tp.Nombre,
+  const sql = `SELECT tp.IdReceta, tt.Tiempo, tt.Tiempo, tp.Ingredientes, tp.Nombre, tp.Imagen,
                JSON_OBJECTAGG(tpa.Paso, tpa.Instruccion) as pasos, GROUP_CONCAT(DISTINCT tpa.Paso) as idPasos,
                GROUP_CONCAT(DISTINCT tpref.IdPreferencias) as prefs
                 FROM TablaPrincipal AS tp
