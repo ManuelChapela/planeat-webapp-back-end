@@ -8,6 +8,9 @@ const {
   addFav,
   delFav,
   getFavs,
+  addNoFav,
+  delNoFav,
+  getNoFavs,
 } = require('../utilities/profile/profile');
 
 exports.getUser = async (req, res) => {
@@ -195,13 +198,30 @@ exports.addUserFav = async (req, res) => {
   addFav(idUser, idRecipe, res);
 };
 
+exports.addUserNoFav = async (req, res) => {
+  const { idUser } = res.user;
+  const { idRecipe } = req.body;
+  addNoFav(idUser, idRecipe, res);
+};
+
 exports.delUserFav = async (req, res) => {
   const { idUser } = res.user;
   const { idRecipe } = req.body;
   delFav(idUser, idRecipe, res);
 };
 
+exports.delUserNoFav = async (req, res) => {
+  const { idUser } = res.user;
+  const { idRecipe } = req.body;
+  delNoFav(idUser, idRecipe, res);
+};
+
 exports.getUserFav = async (req, res) => {
   const { idUser } = res.user;
   getFavs(idUser, res);
+};
+
+exports.getUserNoFav = async (req, res) => {
+  const { idUser } = res.user;
+  getNoFavs(idUser, res);
 };

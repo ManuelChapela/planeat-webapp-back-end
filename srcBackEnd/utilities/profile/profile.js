@@ -99,6 +99,38 @@ exports.addFav = async (idUser, idRecipe, res) => {
   }
 };
 
+exports.addNoFav = async (idUser, idRecipe, res) => {
+  const sql = 'INSERT INTO NoFavs (idUser, idRecipe) VALUES (?)';
+  const values = [[idUser, idRecipe]];
+  try {
+    const results = await doQuery(sql, values);
+    console.log('AÑADIDAS:', results);
+    res.status(200).send({
+      OK: 1,
+      message: `Se ha añadido receta vetada.`,
+      idRecipe: idRecipe,
+    });
+  } catch (error) {
+    console.log(error);
+    if (error.errno === 1062) {
+      res.status(404).send({
+        OK: 0,
+        message: `No se ha podido añadir favorito: La receta vetada está duplicado.`,
+      });
+    } else if (error.errno === 1452) {
+      res.status(409).send({
+        OK: 0,
+        message: `No se ha podido añadir receta vetada: El usuario o la receta no existen.`,
+      });
+    } else {
+      res.status(500).send({
+        OK: 0,
+        message: `No se ha podido añadir receta vetada: ${error.message}`,
+      });
+    }
+  }
+};
+
 exports.delFav = async (idUser, idRecipe, res) => {
   const sql = 'DELETE FROM Favs WHERE idUser = ? AND idRecipe = ?';
   const values = [idUser, idRecipe];
@@ -127,6 +159,34 @@ exports.delFav = async (idUser, idRecipe, res) => {
   }
 };
 
+exports.delNoFav = async (idUser, idRecipe, res) => {
+  const sql = 'DELETE FROM NoFavs WHERE idUser = ? AND idRecipe = ?';
+  const values = [idUser, idRecipe];
+  try {
+    const results = await doQuery(sql, values);
+    console.log('ELIMINADAS:', results.affectedRows);
+    if (results.affectedRows !== 0) {
+      res.status(200).send({
+        OK: 1,
+        message: `Se ha eliminado la receta vetada.`,
+        idRecipe: idRecipe,
+        //idFav: results.insertId,
+      });
+    } else {
+      res.status(404).send({
+        OK: 0,
+        message: `No se ha podido borrar la receta vetada ${idRecipe} del usuario ${idUser}`,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      OK: 0,
+      message: `No se ha podido borrar la receta vetada: ${error.message}`,
+    });
+  }
+};
+
 exports.getFavs = async (idUser, res) => {
   const sql = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
 
@@ -147,23 +207,44 @@ exports.getFavs = async (idUser, res) => {
   }
 };
 
+exports.getNoFavs = async (idUser, res) => {
+  const sql = `SELECT * FROM TablaPrincipal as tp INNER JOIN NoFavs ON tp.IdReceta = NoFavs.idRecipe WHERE NoFavs.idUser=?`;
+
+  try {
+    const results = await doQuery(sql, idUser);
+    console.log(results);
+    res.status(200).send({
+      OK: 1,
+      message: `Obtenidos recetas vetadas del usuario ${idUser}`,
+      Favs: results,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      OK: 0,
+      message: `No se han podido obtener recetas vetadas: ${error.message}`,
+    });
+  }
+};
+
 exports.getFavsMiddle = async (req, res, next) => {
-  const sql = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
-  console.log("AQUIIII!!!!!!")
+  const sqlFav = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
+  const sqlNoFav = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
+
   idUser = res.user;
-  console.log('USER', idUser);
   if (idUser) {
     try {
-      const results = await doQuery(sql, idUser);
-      console.log("RESULTS", results);
-      res.favs = results;
-      console.log("FAAAVS!!!", res.favs)
+      const resultsFav = await doQuery(sqlFav, idUser);
+      res.favs = resultsFav;
+      const resultsNoFav = await doQuery(sqlNoFav, idUser);
+      res.noFavs = resultsNoFav;
+      console.log("NO FAVSSS PROFILE", res.noFavs)
       next();
     } catch (error) {
       console.log(error);
     }
   } else {
-    console.log("NO HAY USUARIO")
+    console.error('NO HAY USUARIO');
     res.favs = [];
     next();
   }

@@ -86,7 +86,7 @@ const transformDetail = (result, favs) => {
     ? result[0].Ingredientes.split(',')
     : [];
 
-  recipe.fav = favs.idReceta === recipe.id ? true: false;
+  recipe.fav = favs.idReceta === recipe.id ? true : false;
 
   recipe.img = result[0].Imagen;
 
@@ -284,6 +284,10 @@ exports.search = async (req, res) => {
     daily,
   } = req.body;
 
+  const { noFavs } = res;
+
+  console.log('NO FAVS!!!!!!', noFavs);
+
   let sql = `SELECT DISTINCT tp.IdReceta AS idReceta, tp.idTipo as idTipo,
                     GROUP_CONCAT(DISTINCT ti.Ingrediente order by ti.Ingrediente ASC) as ingredients,
                     tp.Nombre as Nombre, tp.idCategoria as idCategoria,
@@ -298,10 +302,20 @@ exports.search = async (req, res) => {
              WHERE 1=1 `;
 
   const sqlArray = [];
+  const sqlBanRecipes = noFavs
+    ? ' AND tp.IdReceta NOT IN (' +
+      noFavs
+        .map((el) => {
+          sqlArray.push(el.id);
+          return '?';
+        })
+        .join(',') +
+      ')'
+    : '';
 
   const sqlIngredients =
     ingredients.length !== 0
-      ? `AND tp.IdReceta IN 
+      ? ` AND tp.IdReceta IN 
           (
 	        SELECT DISTINCT tri2.IdReceta
                FROM TablaRecetaIngredientes AS tri2
@@ -333,7 +347,7 @@ exports.search = async (req, res) => {
 
   const sqlBannedCat =
     bannedCategories.filter((el) => el.value).length !== 0
-      ? ' AND tp.IdCategoria NOT IN (' +
+      ? ' AND tp.IdCategoria NOT IN ( ' +
         bannedCategories
           .filter((el) => el.value)
           .map((el) => {
@@ -386,6 +400,7 @@ exports.search = async (req, res) => {
       : ' ';
 
   sql +=
+    sqlBanRecipes +
     sqlIngredients +
     sqlBannedIng +
     sqlBannedCat +
