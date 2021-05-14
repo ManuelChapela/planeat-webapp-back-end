@@ -12,7 +12,7 @@ function uniq(a) {
   });
 }
 
-const transformResult = (result) => {
+const transformResult = (result, favs) => {
   const recipes = [];
   result.map((el) => {
     const recipe = {};
@@ -46,7 +46,7 @@ const transformResult = (result) => {
 
     recipe.img = el.Imagen;
 
-    recipe.ingredients = uniq(el.ingredients.split(','));
+    recipe.ingredients = el.ingredients.split(',');
 
     const prefs = el.prefs ? el.prefs.split(',') : [];
 
@@ -55,13 +55,17 @@ const transformResult = (result) => {
 
     recipe.id = el.idReceta;
 
+    recipe.fav = favs.filter((fav) => el.idReceta === recipe.id).length
+      ? true
+      : false;
+
     recipes.push(recipe);
   });
 
   return recipes;
 };
 
-const transformDetail = (result) => {
+const transformDetail = (result, favs) => {
   console.log('RESULT', result[0]);
   const recipe = {};
   recipe.id = result[0].IdReceta;
@@ -80,6 +84,8 @@ const transformDetail = (result) => {
   recipe.ingredients = result[0].Ingredientes
     ? result[0].Ingredientes.split(',')
     : [];
+
+  recipe.fav = res.favs.idReceta === recipe.id ? true: false;
 
   return recipe;
 };
@@ -275,19 +281,18 @@ exports.search = async (req, res) => {
     daily,
   } = req.body;
 
-  console.log('FAVS', res.favs); //estos favoritos hay que unirlos con la búsqueda
-
-  let sql = `SELECT DISTINCT tp.IdReceta AS idReceta, tp.idTipo as idTipo, GROUP_CONCAT(DISTINCT ti.Ingrediente order by ti.Ingrediente ASC) as ingredients,
-             tp.Nombre as Nombre, tp.idCategoria as idCategoria,
-             tp.idTiempo as idTiempo, tp.Imagen as Imagen, GROUP_CONCAT(DISTINCT tpr.IdPreferencias) as prefs
-                FROM TablaPrincipal AS tp
-                JOIN TablaRecetaIngredientes AS tri
-                	ON tp.IdReceta = tri.IdReceta
-                JOIN TablaIngredientes AS ti
-                	ON tri.IdIngrediente = ti.IdIngrediente
-                JOIN TablaPreferenciasReceta AS tpr
-                  ON tp.IdReceta = tpr.IdReceta
-                WHERE 1=1 `;
+  let sql = `SELECT DISTINCT tp.IdReceta AS idReceta, tp.idTipo as idTipo,
+                    GROUP_CONCAT(DISTINCT ti.Ingrediente order by ti.Ingrediente ASC) as ingredients,
+                    tp.Nombre as Nombre, tp.idCategoria as idCategoria,
+                    tp.idTiempo as idTiempo, tp.Imagen as Imagen, GROUP_CONCAT(DISTINCT tpr.IdPreferencias) as prefs
+             FROM TablaPrincipal AS tp
+             JOIN TablaRecetaIngredientes AS tri
+              	ON tp.IdReceta = tri.IdReceta
+             JOIN TablaIngredientes AS ti
+               	ON tri.IdIngrediente = ti.IdIngrediente
+             JOIN TablaPreferenciasReceta AS tpr
+                ON tp.IdReceta = tpr.IdReceta
+             WHERE 1=1 `;
 
   const sqlArray = [];
 
@@ -391,10 +396,11 @@ exports.search = async (req, res) => {
   try {
     const result = await doQuery(sql, sqlArray);
 
-    const recipes = transformResult(result);
+    const recipes = transformResult(result, res.favs);
 
     //console.log('RESULT:', result);
-    console.log('RECIPES:', recipes);
+    //console.log('RECIPES:', recipes);
+    //console.log('FAVS', res.favs); //estos favoritos hay que unirlos con la búsqueda
 
     res.send({
       OK: 1,
@@ -433,7 +439,7 @@ exports.searchById = async (req, res) => {
     const result = await doQuery(sql, id);
     console.log(result);
 
-    const recipe = transformDetail(result);
+    const recipe = transformDetail(result, res.favs);
 
     res.send({
       OK: 1,
