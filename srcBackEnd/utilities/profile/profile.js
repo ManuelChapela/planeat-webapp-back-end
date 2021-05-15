@@ -217,7 +217,7 @@ exports.getFavs = async (idUser, res) => {
           fav.title = el.title;
           fav.id = el.id;
           fav.time = el.time;
-
+          /* 
           el.prize =
             el.preferences &&
             el.preferences.filter((pref) => (pref = 31)).length &&
@@ -226,6 +226,15 @@ exports.getFavs = async (idUser, res) => {
             el.preferences &&
             el.preferences.filter((pref) => (pref = 111)).length &&
             'Medio';
+ */
+
+          if (el.preferencias) {
+            const arrayPreferencias = el.preferencias.split(',');
+            if (arrayPreferencias.includes("31")) fav.prize = 'Barato';
+            else if (arrayPreferencias.includes("111")) fav.prize = 'Medio';
+          }
+
+          fav.logged=true;
 
           return fav;
         })
