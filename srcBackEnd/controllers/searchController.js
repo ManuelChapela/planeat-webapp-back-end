@@ -57,7 +57,7 @@ const transformResult = (result, favs, user) => {
 
     recipe.id = el.idReceta;
 
-    recipe.fav = favs.filter((fav) => el.idReceta === recipe.id).length
+    recipe.fav = favs.filter((fav) => fav.idReceta === recipe.id).length
       ? true
       : false;
 

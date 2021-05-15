@@ -73,7 +73,7 @@ exports.addFav = async (idUser, idRecipe, res) => {
   try {
     const results = await doQuery(sql, values);
     console.log('AÑADIDAS:', results);
-    console.log("AÑADIENDO FAVORITO")
+    console.log('AÑADIENDO FAVORITO');
     res.status(200).send({
       OK: 1,
       message: `Se ha añadido el favorito.`,
@@ -189,15 +189,61 @@ exports.delNoFav = async (idUser, idRecipe, res) => {
 };
 
 exports.getFavs = async (idUser, res) => {
-  const sql = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
+  const sql = `SELECT  tp.IdReceta AS id, tp.Nombre AS title, tt.Tiempo AS time, 
+                tp.Imagen as img, GROUP_CONCAT(DISTINCT tpr.IdPreferencias) AS preferencias
+                FROM TablaPrincipal AS tp
+                JOIN TablaRecetaIngredientes AS tri
+                  ON tp.IdReceta = tri.IdReceta
+                JOIN TablaIngredientes AS ti
+                  ON tri.IdIngrediente = ti.IdIngrediente
+                JOIN Favs
+                  ON Favs.idRecipe = tp.IdReceta
+                JOIN TablaPreferenciasReceta AS tpr
+                  ON tp.IdReceta = tpr.IdReceta
+                JOIN TablaTiempo as tt
+                  ON tt.IdTiempo = tp.IdTiempo
+                WHERE Favs.idUser=?
+                GROUP by tp.IdReceta`;
 
   try {
     const results = await doQuery(sql, idUser);
     console.log(results);
+
+    const favs = results.length
+      ? results.map((el) => {
+          const fav = {};
+
+          fav.img = el.img;
+          fav.title = el.title;
+          fav.id = el.id;
+          fav.time = el.time;
+          /* 
+          el.prize =
+            el.preferences &&
+            el.preferences.filter((pref) => (pref = 31)).length &&
+            'Barato';
+          el.prize =
+            el.preferences &&
+            el.preferences.filter((pref) => (pref = 111)).length &&
+            'Medio';
+ */
+
+          if (el.preferencias) {
+            const arrayPreferencias = el.preferencias.split(',');
+            if (arrayPreferencias.includes("31")) fav.prize = 'Barato';
+            else if (arrayPreferencias.includes("111")) fav.prize = 'Medio';
+          }
+
+          fav.logged=true;
+
+          return fav;
+        })
+      : [];
+
     res.status(200).send({
       OK: 1,
       message: `Obtenidos favoritos del usuario ${idUser}`,
-      Favs: results,
+      Favs: favs,
     });
   } catch (error) {
     console.log(error);
@@ -246,7 +292,7 @@ exports.getFavsMiddle = async (req, res, next) => {
   } else {
     console.error('NO HAY USUARIO');
     res.favs = [];
-    res.noFavs = []
+    res.noFavs = [];
     next();
   }
 };
