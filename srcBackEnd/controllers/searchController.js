@@ -5,16 +5,9 @@ const {
   getBannedIngredients,
 } = require('../utilities/profile/profile');
 
-//Función para colocar en orden alfabético un array y quitar duplicados
-function uniq(a) {
-  return a.sort().filter(function (item, pos, ary) {
-    return !pos || item != ary[pos - 1];
-  });
-}
-
 const transformResult = (result, favs, user) => {
   const objRecipes = {};
-  objRecipes.logged = user ? true: false;
+  objRecipes.logged = user ? true : false;
   objRecipes.recipes = [];
   result.map((el) => {
     const recipe = {};
@@ -57,7 +50,7 @@ const transformResult = (result, favs, user) => {
 
     recipe.id = el.idReceta;
 
-    recipe.fav = favs.filter((fav) => fav.idReceta === recipe.id).length
+    recipe.fav = favs.filter((fav) => fav.IdReceta === recipe.id).length
       ? true
       : false;
 
@@ -68,7 +61,6 @@ const transformResult = (result, favs, user) => {
 };
 
 const transformDetail = (result, favs, ban) => {
-
   const recipe = {};
   recipe.title = result[0].Nombre;
   recipe.id = result[0].IdReceta;
@@ -311,7 +303,7 @@ exports.search = async (req, res) => {
              WHERE 1=1 `;
 
   const sqlArray = [];
-  const sqlBanRecipes = noFavs.length
+  /* const sqlBanRecipes = noFavs.length
     ? ' AND tp.IdReceta NOT IN (' +
       noFavs
         .map((el) => {
@@ -320,7 +312,7 @@ exports.search = async (req, res) => {
         })
         .join(',') +
       ')'
-    : '';
+    : ''; */
 
   const sqlIngredients =
     ingredients.length !== 0
@@ -409,7 +401,7 @@ exports.search = async (req, res) => {
       : ' ';
 
   sql +=
-    sqlBanRecipes +
+    /*     sqlBanRecipes + */
     sqlIngredients +
     sqlBannedIng +
     sqlBannedCat +
@@ -423,7 +415,17 @@ exports.search = async (req, res) => {
   try {
     const result = await doQuery(sql, sqlArray);
 
-    const recipes = transformResult(result, res.favs, res.user);
+    result.map((el) => console.log('RESULT', el.idReceta));
+
+    noFavs.map((el) => console.log('NOFAVS', el.idRecipe));
+
+    const filteredResult = result.filter(
+      (el) => !noFavs.some((noFav) => noFav.idRecipe === el.idReceta),
+    );
+
+    filteredResult.map((el) => console.log('FILTERED RESULT', el.idReceta));
+
+    const recipes = transformResult(filteredResult, res.favs, res.user);
 
     //console.log('RESULT:', result);
     //console.log('RECIPES:', recipes);
@@ -462,7 +464,6 @@ exports.searchById = async (req, res) => {
                 GROUP BY tp.IdReceta ORDER BY tpa.idPaso`;
   try {
     const result = await doQuery(sql, id);
-    console.log(result);
 
     const recipe = transformDetail(result, res.favs, res.noFavs);
 
