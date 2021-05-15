@@ -239,7 +239,6 @@ exports.getFavsMiddle = async (req, res, next) => {
       res.favs = resultsFav;
       const resultsNoFav = await doQuery(sqlNoFav, idUser);
       res.noFavs = resultsNoFav;
-      console.log("NO FAVSSS PROFILE", res.noFavs)
       next();
     } catch (error) {
       console.log(error);
@@ -247,6 +246,7 @@ exports.getFavsMiddle = async (req, res, next) => {
   } else {
     console.error('NO HAY USUARIO');
     res.favs = [];
+    res.noFavs = []
     next();
   }
 };
