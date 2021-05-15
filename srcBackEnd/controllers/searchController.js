@@ -12,8 +12,10 @@ function uniq(a) {
   });
 }
 
-const transformResult = (result, favs) => {
-  const recipes = [];
+const transformResult = (result, favs, user) => {
+  const objRecipes = {};
+  objRecipes.logged = user ? true: false;
+  objRecipes.recipes = [];
   result.map((el) => {
     const recipe = {};
     if (el.IdTipo === 1) recipe.mainTitle = 'Aperitivos y tapas';
@@ -59,10 +61,10 @@ const transformResult = (result, favs) => {
       ? true
       : false;
 
-    recipes.push(recipe);
+    objRecipes.recipes.push(recipe);
   });
 
-  return recipes;
+  return objRecipes;
 };
 
 const transformDetail = (result, favs, ban) => {
@@ -421,7 +423,7 @@ exports.search = async (req, res) => {
   try {
     const result = await doQuery(sql, sqlArray);
 
-    const recipes = transformResult(result, res.favs);
+    const recipes = transformResult(result, res.favs, res.user);
 
     //console.log('RESULT:', result);
     //console.log('RECIPES:', recipes);
