@@ -65,8 +65,8 @@ const transformResult = (result, favs) => {
   return recipes;
 };
 
-const transformDetail = (result, favs) => {
-  console.log('RESULT', result[0]);
+const transformDetail = (result, favs, ban) => {
+
   const recipe = {};
   recipe.title = result[0].Nombre;
   recipe.id = result[0].IdReceta;
@@ -86,7 +86,14 @@ const transformDetail = (result, favs) => {
     ? result[0].Ingredientes.split(',')
     : [];
 
-  recipe.fav = favs.idReceta === recipe.id ? true : false;
+  recipe.fav = favs.filter((el) => el.IdReceta === recipe.id).length
+    ? true
+    : false;
+
+  console.log('BANNED!!', ban.filter((el) => el.IdReceta === recipe.id).length);
+  recipe.ban = ban.filter((el) => el.IdReceta === recipe.id).length
+    ? true
+    : false;
 
   recipe.img = result[0].Imagen;
 
@@ -435,8 +442,6 @@ exports.search = async (req, res) => {
 };
 
 exports.searchById = async (req, res) => {
-  console.log('FAVS', res.favs); //estos favoritos hay que unirlos con la búsqueda
-
   const { id } = req.params;
 
   const sql = `SELECT tp.IdReceta, tt.Tiempo, tt.Tiempo, tp.Ingredientes, tp.Nombre, tp.Imagen,
@@ -457,7 +462,7 @@ exports.searchById = async (req, res) => {
     const result = await doQuery(sql, id);
     console.log(result);
 
-    const recipe = transformDetail(result, res.favs);
+    const recipe = transformDetail(result, res.favs, res.noFavs);
 
     res.send({
       OK: 1,

@@ -73,6 +73,7 @@ exports.addFav = async (idUser, idRecipe, res) => {
   try {
     const results = await doQuery(sql, values);
     console.log('AÑADIDAS:', results);
+    console.log("AÑADIENDO FAVORITO")
     res.status(200).send({
       OK: 1,
       message: `Se ha añadido el favorito.`,
@@ -229,7 +230,7 @@ exports.getNoFavs = async (idUser, res) => {
 
 exports.getFavsMiddle = async (req, res, next) => {
   const sqlFav = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
-  const sqlNoFav = `SELECT * FROM TablaPrincipal as tp INNER JOIN Favs ON tp.IdReceta = Favs.idRecipe WHERE Favs.idUser=?`;
+  const sqlNoFav = `SELECT * FROM TablaPrincipal as tp INNER JOIN NoFavs ON tp.IdReceta = NoFavs.idRecipe WHERE NoFavs.idUser=?`;
 
   idUser = res.user;
   if (idUser) {

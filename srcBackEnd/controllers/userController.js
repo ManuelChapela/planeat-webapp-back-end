@@ -195,6 +195,7 @@ exports.updateUserBannedIngredients = async (req, res) => {
 exports.addUserFav = async (req, res) => {
   const { idUser } = res.user;
   const { idRecipe } = req.body;
+  console.log("ENTRANDO EN FAVORITOS!!")
   addFav(idUser, idRecipe, res);
 };
 
