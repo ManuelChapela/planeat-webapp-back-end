@@ -309,7 +309,7 @@ exports.search = async (req, res) => {
              WHERE 1=1 `;
 
   const sqlArray = [];
-  const sqlBanRecipes = noFavs
+  const sqlBanRecipes = noFavs.length
     ? ' AND tp.IdReceta NOT IN (' +
       noFavs
         .map((el) => {
@@ -414,7 +414,7 @@ exports.search = async (req, res) => {
     sqlCategories +
     sqlTime +
     sqlDaily +
-    'GROUP BY tp.IdReceta ORDER BY tp.IdReceta, ti.Ingrediente';
+    'GROUP BY tp.IdReceta ORDER BY tp.IdReceta, ti.Ingrediente LIMIT 50';
 
   console.log(sql, sqlArray);
 
