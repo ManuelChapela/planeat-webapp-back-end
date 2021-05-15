@@ -11,7 +11,7 @@ const isValidUser = (user) => {
 };
 
 const isValidPassword = (password) => {
-  //Minimo 8 caracteres, 1 minúscula, 1 mayúscula, 1 número y 1 caracter especial(@#$%&)
+  //Minimo 8 caracteres
   if (!password)
     return {
       OK: 0,

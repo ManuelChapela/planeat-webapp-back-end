@@ -17,7 +17,8 @@ exports.getUser = async (req, res) => {
   const user = res.user.idUser;
 
   try {
-    let sql = 'SELECT * FROM Users  WHERE id = "?"';
+    let sql =
+      'SELECT name, email, userName, photo, boolFavCalendar FROM Users  WHERE id = "?"';
 
     const results = await doQuery(sql, user);
     if (results.length !== 0) {
@@ -47,58 +48,64 @@ exports.getUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const { email, pass, userName, boolFavCalendar, photo, name } = req.body;
   const idUser = res.user.idUser;
-
-  let sql = `UPDATE Users SET `;
-
-  const sqlSet = [];
-  const sqlValues = [];
-
-  if (email) {
-    sqlSet.push(' email = ? ');
-    sqlValues.push(email);
-  }
-
-  if (pass) {
-    sqlSet.push(' pass = ? ');
-    sqlValues.push(SHA256(pass).toString());
-  }
-
-  if (userName) {
-    sqlSet.push(' userName = ? ');
-    sqlValues.push(userName);
-  }
-
-  if (boolFavCalendar) {
-    sqlSet.push(' boolFavCalendar = ?');
-    sqlValues.push(boolFavCalendar);
-  }
-
-  if (photo) {
-    sqlSet.push(' photo = ? ');
-    sqlValues.push(photo);
-  }
-
-  if (name) {
-    sqlSet.push(' name = ? ');
-    sqlValues.push(name);
-  }
-
-  sql += sqlSet.join(',') + ` WHERE id =  ?`;
-  sqlValues.push(idUser);
-
-  console.log(sql);
-  console.log(sqlValues);
-
   try {
+    let sql = `UPDATE Users SET `;
+
+    const sqlSet = [];
+    const sqlValues = [];
+
+    if (email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        throw 'Email no válido, prueba otra vez';
+      sqlSet.push(' email = ? ');
+      sqlValues.push(email);
+    }
+
+    if (pass) {
+      if (pass.length < 8) throw 'Contraseña no válida ';
+      sqlSet.push(' pass = ? ');
+      sqlValues.push(SHA256(pass).toString());
+    }
+
+    if (userName) {
+      sqlSet.push(' userName = ? ');
+      sqlValues.push(userName);
+    }
+
+    if (boolFavCalendar) {
+      sqlSet.push(' boolFavCalendar = ?');
+      sqlValues.push(boolFavCalendar);
+    }
+
+    if (photo) {
+      sqlSet.push(' photo = ? ');
+      sqlValues.push(photo);
+    }
+
+    if (name) {
+      sqlSet.push(' name = ? ');
+      sqlValues.push(name);
+    }
+
+    sql += sqlSet.join(',') + ` WHERE id =  ?`;
+    sqlValues.push(idUser);
+
+    console.log(sql);
+    console.log(sqlValues);
+
     const results = await doQuery(sql, sqlValues);
     console.log('SEGUNDO', results);
 
     if (!results.affectedRows) {
       throw 'No se ha actualizado el perfil';
     }
+    sql =
+      'SELECT name, email, userName, photo, boolFavCalendar FROM Users  WHERE id = "?"';
+    const resultsUser = await doQuery(sql, idUser);
     res.send({
       OK: 1,
       message: 'Perfil actualizado',
+      user: resultsUser[0],
     });
   } catch (error) {
     console.log(error);
@@ -114,7 +121,7 @@ exports.updateUserBannedCategories = async (req, res) => {
   const { idUser } = res.user;
   const bannedObj = req.body.bannedObj;
 
-  console.log("TESTTT", res.user)
+  console.log('TESTTT', res.user);
 
   //Para hacer el update vamos a borrar primero todo lo que hay del usuario
   const del = await delBannedCategories(idUser).catch((error) => {
@@ -195,7 +202,7 @@ exports.updateUserBannedIngredients = async (req, res) => {
 exports.addUserFav = async (req, res) => {
   const { idUser } = res.user;
   const { idRecipe } = req.body;
-  console.log("ENTRANDO EN FAVORITOS!!")
+  console.log('ENTRANDO EN FAVORITOS!!');
   addFav(idUser, idRecipe, res);
 };
 
