@@ -200,6 +200,7 @@ exports.isLogged = async (req, res, next) => {
           res.user = idUser;
           next();
         } catch (error) {
+          console.log(error);
           res.user = false;
           next();
         }
@@ -367,8 +368,16 @@ const getOAuth2Client = (clientId, clientSecret, redirectUri) => {
   return oauth2Client;
 };
 
-const newGoogleUser = async (user) => {
-  // secreto nombre apellidos foto tipoAcceso gmail
+const newUser = async ({
+  secret,
+  email,
+  pass,
+  userName,
+  boolFavCalendar,
+  photo,
+  name,
+}) => {
+  /*   // secreto nombre apellidos foto tipoAcceso gmail
   const { secreto, nombre, apellidos, foto, gmail } = user;
   let sql = `INSERT INTO usuario (secreto) VALUES ("${secreto}")`;
   console.log(sql);
@@ -390,12 +399,15 @@ const newGoogleUser = async (user) => {
 
   response = await doQuery(sql);
   console.log('USUARIO CREADO', respUsuario.insertId);
-  return respUsuario.insertId;
+  return respUsuario.insertId; */
+
+  sql = `INSERT INTO Users (secret, email, pass, userName, boolFavCalendar, photo, name) VALUES (?)`;
+  values = [[secret, email, pass, userName, boolFavCalendar, photo, name]];
+  response = await doQuery(sql, values);
+  return response.insertId;
 };
 
 exports.googleOAuth = async (req, res) => {
-  console.log('ACTION GOOGLE OAUTH', req.query.state);
-  const action = req.query.state;
   let idUser;
   let secreto;
   const clientId = process.env.GOOGLE_AUTH_CLIENT_ID;
@@ -423,40 +435,38 @@ exports.googleOAuth = async (req, res) => {
     }
     const email = ticket.payload.email;
     const verifiedUser = ticket.payload.email_verified;
-
+    console.log(ticket.payload);
     //Si tenemos correo electrónico y el usuario está verificado por google
     if (email && verifiedUser) {
       //vemos si está en nuestra base de datos
-      try {
-        const sql = `SELECT u.id, u.secreto
-              FROM usuario u
-                JOIN accesos a ON u.id = a.idUsuario
-                JOIN acceso_Gmail an ON a.id = an.idAcceso
-              WHERE an.gmail = "${email}"`;
-        const result = await doQuery(sql);
+      const sql = `SELECT u.id, u.secret
+      FROM Users u
+      WHERE u.email = "${email}"`;
+      const result = await doQuery(sql);
 
+      let secreto;
+      let idUser;
+
+      try {
         //vemos si existía ya en la base de datos o no
         if (result.length !== 0) {
           //aquí meter el valor de secreto e id
-          secreto = result[0].secreto;
+          secreto = result[0].secret;
           idUser = result[0].id;
         } else {
-          if (action === 'login') {
-            console.log('USUARIO NO EXISTE EN LA BASE DE DATOS');
-            throw { message: `Usuario ${email} no está registrado` };
-          }
-
           //el usuario no está en la base de datos, hay que crearlo
           const user = {
-            secreto: nanoid(10),
-            nombre: ticket.payload.given_name,
-            apellidos: ticket.payload.family_name,
-            foto: ticket.payload.picture,
-            gmail: ticket.payload.email,
+            secret: nanoid(10),
+            userName: ticket.payload.given_name,
+            name: ticket.payload.name,
+            photo: ticket.payload.picture,
+            email: ticket.payload.email,
+            pass: SHA256(nanoid(10)),
+            boolFavCalendar: false,
           };
           try {
-            idUser = await newGoogleUser(user);
-            secreto = user.secreto;
+            idUser = await newUser(user);
+            secreto = user.secret;
           } catch {
             throw {
               status: 500,
@@ -471,10 +481,8 @@ exports.googleOAuth = async (req, res) => {
         console.log('PAYLOAD', payload);
         const token = jwt.sign(payload, secreto, options);
         //TODO: definir donde hacemos al final la redirección a front
-        console.log('REDIRIGIR!!!');
-        res.redirect(
-          process.env.FRONT_URL + '?action=google-oauth&token=' + token,
-        );
+        console.log('REDIRIGIR!!!', token);
+        res.redirect(process.env.FRONT_URL + '/nevera?token=' + token);
       } catch (error) {
         //errores varios
         throw {
@@ -497,12 +505,15 @@ exports.googleOAuth = async (req, res) => {
         status: error.status,
         message: error.message,
       }); */
+      console.log(error);
       res.redirect(`${process.env.FRONT_URL}?error=${error.message}`);
     } else {
       /* res.status(500).send({
         OK: 0,
         message: error.message,
       }); */
+      console.log(error);
+
       res.redirect(`${process.env.FRONT_URL}?error=${error.message}`);
     }
   }
