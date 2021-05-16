@@ -4,7 +4,7 @@ const { nanoid } = require('nanoid');
 const { google } = require('googleapis');
 const { mailer } = require('../utilities/mailer');
 const { doQuery } = require('../utilities/doQuery');
-//const dbConnection = require('../utilities/db');
+const { googleOauthLink } = require('../utilities/googleOauth/googleOauth');
 
 const isValidUser = (user) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user);
@@ -44,8 +44,7 @@ const isValidPassword = (password) => {
     return {
       OK: false,
       message: 'La contraseña debe contener un carácter especial (@#$%&)',
-    }; */ else
-    return { OK: true };
+    }; */ else return { OK: true };
 };
 
 const isValidUserPass = (user, password, res) => {
@@ -63,7 +62,7 @@ const isValidUserPass = (user, password, res) => {
   }
 
   if (!response.OK) {
-    console.log(response)
+    console.log(response);
     res.status(422).send(response);
     return false;
   }
@@ -77,7 +76,6 @@ exports.signUp = async (req, res, next) => {
   const name = req.body.name;
   const userName = req.body.name;
   const photo = req.body.photo;
-
 
   //Validamos los campos user y password
   if (isValidUserPass(email, pass, res)) {
@@ -174,13 +172,13 @@ exports.logout = async (req, res) => {
 
 exports.isLogged = async (req, res, next) => {
   const authorization = req.headers.authorization;
-  console.log(authorization)
+  console.log(authorization);
 
   if (authorization) {
     const token = authorization.split(' ')[1];
-    console.log("TOKEN", token)
+    console.log('TOKEN', token);
     const payload = jwt.decode(token);
-    console.log(payload)
+    console.log(payload);
     if (!payload) {
       res.user = false;
       next();
@@ -510,7 +508,7 @@ exports.googleOAuth = async (req, res) => {
   }
 };
 
-function getGoogleAuthURL(oAuthData, action) {
+function getGoogleAuthURL(oAuthData) {
   /*
    * Generate a url that asks permissions to the user's email and profile
    */
@@ -524,49 +522,13 @@ function getGoogleAuthURL(oAuthData, action) {
     access_type: 'offline',
     prompt: 'consent',
     scope: scopes, // If you only need one scope you can pass it as string
-    state: action,
   });
 }
 
 exports.googleLink = (req, res) => {
-  const { action } = req.params;
+  const link = googleOauthLink();
 
-  console.log('ACTION', action);
-
-  if (action === 'login' || action === 'link' || action === 'signup') {
-    const oAuthData = {};
-    if (action === 'link') {
-      oAuthData.clientId = process.env.GOOGLE_LINK_CLIENT_ID;
-      oAuthData.clientSecret = process.env.GOOGLE_LINK_SECRET;
-      oAuthData.redirectUri = process.env.GOOGLE_LINK_REDIRECT_URI;
-    } else {
-      oAuthData.clientId = process.env.GOOGLE_AUTH_CLIENT_ID;
-      oAuthData.clientSecret = process.env.GOOGLE_AUTH_SECRET;
-      oAuthData.redirectUri = process.env.GOOGLE_AUTH_REDIRECT_URI;
-    }
-    console.log('OAUTHDATA', oAuthData);
-    try {
-      const respuesta = getGoogleAuthURL(oAuthData, action);
-      console.log('google link creado');
-      res.status(200).send({
-        OK: 1,
-        message: 'google link creado',
-        link: `${respuesta}`,
-      });
-    } catch (error) {
-      console.log(`ERROR: ${error}`);
-      res.status(500).send({
-        OK: 1,
-        message: `Error al crear link google ${error}`,
-      });
-    }
-  } else {
-    console.log(`Opción ${action} no permitida`);
-    res.status(404).send({
-      OK: 0,
-      message: `Opción ${action} no permitida`,
-    });
-  }
+  link.OK ? res.status(200).send(link) : res.status(500).send(link);
 };
 
 const validateToken = async (authorization, res) => {
