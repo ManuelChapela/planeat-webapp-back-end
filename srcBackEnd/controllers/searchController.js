@@ -479,3 +479,55 @@ exports.searchById = async (req, res) => {
     });
   }
 };
+
+exports.saveSearchPrefs = async (req, res) => {
+  const { bannedCategories, bannedIngredients } = req.body;
+  idUser = res.user;
+  console.log(req.body, idUser.idUser);
+
+  const sqlDeleteCat = 'DELETE FROM UserBannedCategories WHERE idUser = ?'; //idUser
+  const sqlInsertCat =
+    'INSERT INTO UserBannedCategories (idCategory, idUser) VALUES (?,?)';
+  const sqlInsertCatArray = bannedCategories
+    ? bannedCategories.map((el) => [el, idUser.idUser])
+    : [];
+
+  const sqlDeleteIng = 'DELETE FROM UserBannedIngredients WHERE idUser = ?'; //idUser
+  const sqlInsertIng =
+    'INSERT INTO UserBannedIngredients (idIngredient, idUser) VALUES (?,?)';
+  const sqlInsertIngArray = bannedIngredients
+    ? bannedIngredients.map((el) => [el, idUser.idUser])
+    : [];
+
+  try {
+    console.log(sqlDeleteCat);
+    const resultDeleteCat = await doQuery(sqlDeleteCat, idUser.idUser);
+    const resultInsertCat = sqlInsertCatArray.map(
+      async (el) => await doQuery(sqlInsertCat, el),
+    );
+    console.log(sqlDeleteIng);
+
+    const resultDeleteIng = await doQuery(sqlDeleteIng, idUser.idUser);
+
+    const resultInsertIng = sqlInsertIngArray.map(
+      async (el) => await doQuery(sqlInsertIng, el),
+    );
+    console.log(
+      await resultDeleteCat,
+      Promise.all(resultInsertCat),
+      await resultDeleteIng,
+      Promise.all(resultInsertIng),
+    );
+
+    res.send({
+      OK: 1,
+      message: 'modificada preferencias usuario',
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      OK: 0,
+      error: error.message,
+    });
+  }
+};
